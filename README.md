@@ -1,1 +1,1 @@
-# python_note
+# notes
