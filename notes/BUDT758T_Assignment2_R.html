@@ -73,7 +73,7 @@
 <br>Topic: Logistic Regression
 <br>Instructor: Prof. Courtney Paulson
 <br>Student: Xukun(Frank) LIU <a href="https://www.xukun-liu.com/index.html">www.xukun-liu.com</a>
-<br>Details: <a href='https://drive.google.com/drive/folders/1mSFXNe_RNVsMBCAcBktiDYKUW2AEaRwi?usp=sharing'>Data/Response</a>
+<br>Details: <a href='https://drive.google.com/drive/folders/1mSFXNe_RNVsMBCAcBktiDYKUW2AEaRwi?usp=sharing' target="_blank">Data/Response</a>
 </p>
 
 
@@ -170,38 +170,38 @@
 <span class="hl std">model3</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(Award</span><span class="hl opt">~</span><span class="hl std">Balance</span><span class="hl opt">+</span><span class="hl std">Qual_miles</span><span class="hl opt">+</span><span class="hl std">cc1_miles</span><span class="hl opt">+</span><span class="hl std">Bonus_miles</span><span class="hl opt">+</span><span class="hl std">Bonus_trans</span><span class="hl opt">+</span><span class="hl std">Flight_miles_12mo</span><span class="hl opt">+</span><span class="hl std">Flight_trans_12</span><span class="hl opt">+</span><span class="hl std">Days_since_enroll)</span>
 <span class="hl kwd">summary</span><span class="hl std">(model3)</span>
 </pre></div>
-<div class="output"><pre class="knitr r">## 
+<div class="output"><pre class="knitr r">##
 ## Call:
-## glm(formula = Award ~ Balance + Qual_miles + cc1_miles + Bonus_miles + 
+## glm(formula = Award ~ Balance + Qual_miles + cc1_miles + Bonus_miles +
 ##     Bonus_trans + Flight_miles_12mo + Flight_trans_12 + Days_since_enroll)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -1.0518  -0.3129  -0.1822   0.4479   0.8888  
-## 
+##
+## Deviance Residuals:
+##     Min       1Q   Median       3Q      Max
+## -1.0518  -0.3129  -0.1822   0.4479   0.8888
+##
 ## Coefficients:
-##                     Estimate Std. Error t value Pr(&gt;|t|)    
+##                     Estimate Std. Error t value Pr(&gt;|t|)
 ## (Intercept)        1.023e-01  2.083e-02   4.912 9.56e-07 ***
-## Balance           -1.749e-07  9.490e-08  -1.843  0.06539 .  
-## Qual_miles         3.173e-05  1.095e-05   2.899  0.00378 ** 
-## cc1_miles2         5.666e-02  3.622e-02   1.564  0.11790    
-## cc1_miles3         7.729e-02  3.076e-02   2.513  0.01204 *  
-## cc1_miles4         2.620e-02  4.217e-02   0.621  0.53444    
-## cc1_miles5        -3.553e-02  7.199e-02  -0.494  0.62170    
+## Balance           -1.749e-07  9.490e-08  -1.843  0.06539 .
+## Qual_miles         3.173e-05  1.095e-05   2.899  0.00378 **
+## cc1_miles2         5.666e-02  3.622e-02   1.564  0.11790
+## cc1_miles3         7.729e-02  3.076e-02   2.513  0.01204 *
+## cc1_miles4         2.620e-02  4.217e-02   0.621  0.53444
+## cc1_miles5        -3.553e-02  7.199e-02  -0.494  0.62170
 ## Bonus_miles        6.484e-06  9.186e-07   7.058 2.16e-12 ***
-## Bonus_trans        1.896e-03  1.352e-03   1.402  0.16096    
-## Flight_miles_12mo -3.751e-07  1.325e-05  -0.028  0.97741    
+## Bonus_trans        1.896e-03  1.352e-03   1.402  0.16096
+## Flight_miles_12mo -3.751e-07  1.325e-05  -0.028  0.97741
 ## Flight_trans_12    2.483e-02  5.087e-03   4.881 1.12e-06 ***
 ## Days_since_enroll  2.549e-05  4.363e-06   5.842 5.82e-09 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
+##
 ## (Dispersion parameter for gaussian family taken to be 0.1898703)
-## 
+##
 ##     Null deviance: 611.21  on 2598  degrees of freedom
 ## Residual deviance: 491.19  on 2587  degrees of freedom
 ## AIC: 3071.6
-## 
+##
 ## Number of Fisher Scoring iterations: 2
 </pre></div>
 <div class="source"><pre class="knitr r"><span class="hl kwd">detach</span><span class="hl std">(dt_train)</span>
@@ -263,8 +263,8 @@
 </pre></div>
 <div class="source"><pre class="knitr r"><span class="hl kwd">table</span><span class="hl std">(dt_test</span><span class="hl opt">$</span><span class="hl std">Award)</span>
 </pre></div>
-<div class="output"><pre class="knitr r">## 
-##   0   1 
+<div class="output"><pre class="knitr r">##
+##   0   1
 ## 902 498
 </pre></div>
 <div class="source"><pre class="knitr r"><span class="hl std">dt_3f</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(</span><span class="hl str">'Balance'</span> <span class="hl std">=</span> <span class="hl num">10000</span><span class="hl std">,</span>
@@ -279,7 +279,7 @@
 <span class="hl std">predict3_3f</span> <span class="hl kwb">=</span> <span class="hl kwd">predict.glm</span><span class="hl std">(model3,dt_3f)</span>
 <span class="hl kwd">print</span><span class="hl std">(predict3_3f)</span>
 </pre></div>
-<div class="output"><pre class="knitr r">##        1 
+<div class="output"><pre class="knitr r">##        1
 ## 1.596626
 </pre></div>
 <div class="source"><pre class="knitr r"><span class="hl kwd">attach</span><span class="hl std">(dt_train)</span>
@@ -288,39 +288,39 @@
              <span class="hl kwc">family</span><span class="hl std">=</span><span class="hl str">'binomial'</span><span class="hl std">)</span>
 <span class="hl kwd">summary</span><span class="hl std">(model4)</span>
 </pre></div>
-<div class="output"><pre class="knitr r">## 
+<div class="output"><pre class="knitr r">##
 ## Call:
-## glm(formula = Award ~ Balance + Qual_miles + Bonus_miles + Bonus_trans + 
-##     Flight_miles_12mo + Flight_trans_12 + Days_since_enroll + 
+## glm(formula = Award ~ Balance + Qual_miles + Bonus_miles + Bonus_trans +
+##     Flight_miles_12mo + Flight_trans_12 + Days_since_enroll +
 ##     cc1_miles, family = &quot;binomial&quot;)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -3.0909  -0.8066  -0.5837   0.9637   2.1801  
-## 
+##
+## Deviance Residuals:
+##     Min       1Q   Median       3Q      Max
+## -3.0909  -0.8066  -0.5837   0.9637   2.1801
+##
 ## Coefficients:
-##                     Estimate Std. Error z value Pr(&gt;|z|)    
+##                     Estimate Std. Error z value Pr(&gt;|z|)
 ## (Intercept)       -2.071e+00  1.240e-01 -16.710  &lt; 2e-16 ***
 ## Balance           -1.896e-06  5.734e-07  -3.307 0.000944 ***
-## Qual_miles         1.460e-04  5.920e-05   2.466 0.013682 *  
+## Qual_miles         1.460e-04  5.920e-05   2.466 0.013682 *
 ## Bonus_miles        6.096e-05  7.380e-06   8.259  &lt; 2e-16 ***
-## Bonus_trans        4.964e-03  7.449e-03   0.666 0.505172    
-## Flight_miles_12mo -1.871e-05  8.997e-05  -0.208 0.835269    
+## Bonus_trans        4.964e-03  7.449e-03   0.666 0.505172
+## Flight_miles_12mo -1.871e-05  8.997e-05  -0.208 0.835269
 ## Flight_trans_12    2.184e-01  3.753e-02   5.820 5.88e-09 ***
 ## Days_since_enroll  1.355e-04  2.350e-05   5.765 8.14e-09 ***
-## cc1_miles2         2.114e-01  1.858e-01   1.138 0.255186    
-## cc1_miles3         2.938e-02  1.707e-01   0.172 0.863400    
-## cc1_miles4        -7.882e-01  2.739e-01  -2.878 0.004005 ** 
+## cc1_miles2         2.114e-01  1.858e-01   1.138 0.255186
+## cc1_miles3         2.938e-02  1.707e-01   0.172 0.863400
+## cc1_miles4        -7.882e-01  2.739e-01  -2.878 0.004005 **
 ## cc1_miles5        -1.627e+00  4.611e-01  -3.527 0.000420 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
+##
 ## (Dispersion parameter for binomial family taken to be 1)
-## 
+##
 ##     Null deviance: 3447.2  on 2598  degrees of freedom
 ## Residual deviance: 2827.4  on 2587  degrees of freedom
 ## AIC: 2851.4
-## 
+##
 ## Number of Fisher Scoring iterations: 5
 </pre></div>
 <div class="source"><pre class="knitr r"><span class="hl kwd">detach</span><span class="hl std">(dt_train)</span>
@@ -378,7 +378,7 @@
 <div class="source"><pre class="knitr r"><span class="hl std">predict4_3f</span> <span class="hl kwb">=</span> <span class="hl kwd">predict.glm</span><span class="hl std">(model4,dt_3f,</span><span class="hl kwc">type</span><span class="hl std">=</span><span class="hl str">'response'</span><span class="hl std">)</span>
 <span class="hl kwd">print</span><span class="hl std">(predict4_3f)</span>
 </pre></div>
-<div class="output"><pre class="knitr r">##         1 
+<div class="output"><pre class="knitr r">##         1
 ## 0.9994038
 </pre></div>
 </div></div>
