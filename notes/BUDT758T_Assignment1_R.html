@@ -1,0 +1,450 @@
+<html>
+
+<head>
+<style type="text/css">
+.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.left {
+  text-align: left;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>BUDT758T_Assignment#1_R code</title>
+</head>
+
+<body>
+
+<p>
+<br>BUDT758T_Assignment#1
+<br>Topic: Linear Regression
+<br>Instructor: Prof. Courtney Paulson
+<br>Student: Xukun(Frank) LIU <a href="https://www.xukun-liu.com/index.html">www.xukun-liu.com</a>
+<br>Details: <a href='https://drive.google.com/drive/folders/1qL3Nhml4vLDXZjBvy0mo4hf-A_f1Amh7?usp=sharing'>Download Data & Response</a>
+</p>
+
+<div class="chunk" id="BUDT758T_Assignment_1"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com">#BUDT758T Assignment#1</span>
+
+<span class="hl com">#1.a. load the airlines data into R and attach it to your R session</span>
+<span class="hl kwd">library</span><span class="hl std">(readr)</span>
+<span class="hl std">Airlines_Data</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read_csv</span><span class="hl std">(</span><span class="hl str">&quot;Airlines_Data.csv&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## Parsed with column specification:
+## cols(
+##   ID = col_double(),
+##   Balance = col_double(),
+##   Qual_miles = col_double(),
+##   cc1_miles = col_double(),
+##   cc2_miles = col_double(),
+##   cc3_miles = col_double(),
+##   Bonus_miles = col_double(),
+##   Bonus_trans = col_double(),
+##   Flight_miles_12mo = col_double(),
+##   Flight_trans_12 = col_double(),
+##   Days_since_enroll = col_double(),
+##   Award = col_double()
+## )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#View(Airlines_Data)</span>
+<span class="hl kwd">attach</span><span class="hl std">(Airlines_Data)</span>
+<span class="hl kwd">str</span><span class="hl std">(Airlines_Data)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame':	3999 obs. of  12 variables:
+##  $ ID               : num  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Balance          : num  28143 19244 41354 14776 97752 ...
+##  $ Qual_miles       : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ cc1_miles        : num  1 1 1 1 4 1 3 1 3 3 ...
+##  $ cc2_miles        : num  1 1 1 1 1 1 1 1 2 1 ...
+##  $ cc3_miles        : num  1 1 1 1 1 1 1 1 1 1 ...
+##  $ Bonus_miles      : num  174 215 4123 500 43300 ...
+##  $ Bonus_trans      : num  1 2 4 1 26 0 25 4 43 28 ...
+##  $ Flight_miles_12mo: num  0 0 0 0 2077 ...
+##  $ Flight_trans_12  : num  0 0 0 0 4 0 0 1 12 3 ...
+##  $ Days_since_enroll: num  7000 6968 7034 6952 6935 ...
+##  $ Award            : num  0 0 0 0 1 0 0 1 1 1 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   Balance = col_double(),
+##   ..   Qual_miles = col_double(),
+##   ..   cc1_miles = col_double(),
+##   ..   cc2_miles = col_double(),
+##   ..   cc3_miles = col_double(),
+##   ..   Bonus_miles = col_double(),
+##   ..   Bonus_trans = col_double(),
+##   ..   Flight_miles_12mo = col_double(),
+##   ..   Flight_trans_12 = col_double(),
+##   ..   Days_since_enroll = col_double(),
+##   ..   Award = col_double()
+##   .. )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#1.b. Change the cc3_miles variable to a factor variable using as.factor() in R.</span>
+<span class="hl com">#1.b. Use this new variable for the remainder of the assignment.</span>
+<span class="hl std">Airlines_Data</span><span class="hl opt">$</span><span class="hl std">cc3_miles</span><span class="hl kwb">=</span><span class="hl kwd">as.factor</span><span class="hl std">(Airlines_Data</span><span class="hl opt">$</span><span class="hl std">cc3_miles)</span>
+<span class="hl com">#cc3_miles = as.factor(cc3_miles)</span>
+<span class="hl kwd">str</span><span class="hl std">(Airlines_Data)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame':	3999 obs. of  12 variables:
+##  $ ID               : num  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Balance          : num  28143 19244 41354 14776 97752 ...
+##  $ Qual_miles       : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ cc1_miles        : num  1 1 1 1 4 1 3 1 3 3 ...
+##  $ cc2_miles        : num  1 1 1 1 1 1 1 1 2 1 ...
+##  $ cc3_miles        : Factor w/ 5 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ Bonus_miles      : num  174 215 4123 500 43300 ...
+##  $ Bonus_trans      : num  1 2 4 1 26 0 25 4 43 28 ...
+##  $ Flight_miles_12mo: num  0 0 0 0 2077 ...
+##  $ Flight_trans_12  : num  0 0 0 0 4 0 0 1 12 3 ...
+##  $ Days_since_enroll: num  7000 6968 7034 6952 6935 ...
+##  $ Award            : num  0 0 0 0 1 0 0 1 1 1 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   Balance = col_double(),
+##   ..   Qual_miles = col_double(),
+##   ..   cc1_miles = col_double(),
+##   ..   cc2_miles = col_double(),
+##   ..   cc3_miles = col_double(),
+##   ..   Bonus_miles = col_double(),
+##   ..   Bonus_trans = col_double(),
+##   ..   Flight_miles_12mo = col_double(),
+##   ..   Flight_trans_12 = col_double(),
+##   ..   Days_since_enroll = col_double(),
+##   ..   Award = col_double()
+##   .. )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">str</span><span class="hl std">(cc3_miles)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  num [1:3999] 1 1 1 1 1 1 1 1 1 1 ...
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">str</span><span class="hl std">(Airlines_Data</span><span class="hl opt">$</span><span class="hl std">cc3_miles)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  Factor w/ 5 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#1.c Create two new variables for the data set:</span>
+<span class="hl com">#1.c.i Years_since_enroll: the number of years since the customer enrolled in the program</span>
+<span class="hl com">#1.c.i (note this does not need to be a rounded number; you can do partial years, if you wish)</span>
+<span class="hl std">Airlines_Data[</span><span class="hl str">'Years_since_enroll'</span><span class="hl std">]</span> <span class="hl kwb">=</span> <span class="hl std">Days_since_enroll</span><span class="hl opt">/</span><span class="hl num">365</span>
+
+<span class="hl com">#1.c.ii. Loyal_customer: a variable that equals 1 if the customer enrolled more than five years ago and equals 0 if the customer did not</span>
+<span class="hl std">Airlines_Data[</span><span class="hl str">'Loyal_customer'</span><span class="hl std">]</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(Airlines_Data</span><span class="hl opt">$</span><span class="hl std">Years_since_enroll</span><span class="hl opt">&gt;</span><span class="hl num">5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+
+<span class="hl com">#1.d. Calculate the mean and median of the Balance variable. Does this concern you? Why or why not?</span>
+<span class="hl kwd">mean</span><span class="hl std">(Airlines_Data</span><span class="hl opt">$</span><span class="hl std">Balance)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 73601.33
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">median</span><span class="hl std">(Airlines_Data</span><span class="hl opt">$</span><span class="hl std">Balance)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 43097
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#1.e. Present a blue histogram of the Balance variable.</span>
+<span class="hl com">#1.e.i. Does this agree with what you found in part (d)? Why or why not?</span>
+<span class="hl com">#1.e.ii. Is this likely to cause problems if we use Balance in a regression? Why or why not?</span>
+<span class="hl kwd">hist</span><span class="hl std">(Balance,</span><span class="hl kwc">col</span> <span class="hl std">=</span> <span class="hl str">'blue'</span><span class="hl std">,</span><span class="hl kwc">breaks</span> <span class="hl std">=</span> <span class="hl num">100</span><span class="hl std">,</span><span class="hl kwc">main</span> <span class="hl std">=</span> <span class="hl str">'1-1-Balance'</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-1.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com">#1.f. Calculate the mean of Award. What percentage of the customers in this data set did not claim a travel award?</span>
+<span class="hl kwd">mean</span><span class="hl std">(Award)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.3703426
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">mean</span><span class="hl std">(Award)</span><span class="hl opt">*</span><span class="hl num">100</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 37.03426
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#2.a. Run a simple linear regression in R using Award to predict Balance.</span>
+<span class="hl com">#2.a. Report the summary of the regression. Do you consider this to be a useful model?</span>
+<span class="hl std">model.2.a</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(</span><span class="hl kwc">formula</span> <span class="hl std">= Balance</span> <span class="hl opt">~</span> <span class="hl std">Award)</span>
+<span class="hl kwd">summary</span><span class="hl std">(model.2.a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = Balance ~ Award)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+##  -97053   -50362   -27189    20910  1607785  
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)    59808       1976   30.26   &lt;2e-16 ***
+## Award          37245       3248   11.47   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 9834632555)
+## 
+##     Null deviance: 4.0603e+13  on 3998  degrees of freedom
+## Residual deviance: 3.9309e+13  on 3997  degrees of freedom
+## AIC: 103366
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#2.b. Create and report a scatterplot with the variable Balance on the y-axis and Award on the x-axis.</span>
+<span class="hl com">#2.b. Add the regression line from the model in part (a) to the plot in red with a line thickness of 2.</span>
+<span class="hl com">#2.b. Does your plot seem to agree with your conclusion about the usefulness of the model in part (a)?</span>
+<span class="hl kwd">plot</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=Award,</span><span class="hl kwc">y</span><span class="hl std">=Balance)</span>
+<span class="hl kwd">abline</span><span class="hl std">(model.2.a,</span><span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">'red'</span><span class="hl std">,</span><span class="hl kwc">lwd</span> <span class="hl std">=</span> <span class="hl num">2</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-2.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com">#2.c. State precisely what effect the value of Award has on the predicted Balance.</span>
+
+<span class="hl com">#3.a. Run a multiple linear regression in R</span>
+<span class="hl com">#3.a. using Award, cc3_miles, Years_since_enroll, Loyal_customer, Bonus_miles, and Bonus_trans to predict Balance.</span>
+<span class="hl com">#3.a. Report the summary of the regression.</span>
+<span class="hl com">#3.a.i. Is this a better or worse model than your model from Question 2? Justify your answer.</span>
+<span class="hl com">#3.a.ii. Without any more calculations, do you have any potential concerns about multicollinearity with this model? Explain.</span>
+<span class="hl kwd">str</span><span class="hl std">(Airlines_Data)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame':	3999 obs. of  14 variables:
+##  $ ID                : num  1 2 3 4 5 6 7 8 9 10 ...
+##  $ Balance           : num  28143 19244 41354 14776 97752 ...
+##  $ Qual_miles        : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ cc1_miles         : num  1 1 1 1 4 1 3 1 3 3 ...
+##  $ cc2_miles         : num  1 1 1 1 1 1 1 1 2 1 ...
+##  $ cc3_miles         : Factor w/ 5 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ Bonus_miles       : num  174 215 4123 500 43300 ...
+##  $ Bonus_trans       : num  1 2 4 1 26 0 25 4 43 28 ...
+##  $ Flight_miles_12mo : num  0 0 0 0 2077 ...
+##  $ Flight_trans_12   : num  0 0 0 0 4 0 0 1 12 3 ...
+##  $ Days_since_enroll : num  7000 6968 7034 6952 6935 ...
+##  $ Award             : num  0 0 0 0 1 0 0 1 1 1 ...
+##  $ Years_since_enroll: num  19.2 19.1 19.3 19 19 ...
+##  $ Loyal_customer    : num  1 1 1 1 1 1 1 1 1 1 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ID = col_double(),
+##   ..   Balance = col_double(),
+##   ..   Qual_miles = col_double(),
+##   ..   cc1_miles = col_double(),
+##   ..   cc2_miles = col_double(),
+##   ..   cc3_miles = col_double(),
+##   ..   Bonus_miles = col_double(),
+##   ..   Bonus_trans = col_double(),
+##   ..   Flight_miles_12mo = col_double(),
+##   ..   Flight_trans_12 = col_double(),
+##   ..   Days_since_enroll = col_double(),
+##   ..   Award = col_double()
+##   .. )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model.3.a</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(</span><span class="hl kwc">formula</span> <span class="hl std">= Balance</span> <span class="hl opt">~</span> <span class="hl std">Award</span><span class="hl opt">+</span><span class="hl std">cc3_miles</span><span class="hl opt">+</span><span class="hl std">Years_since_enroll</span><span class="hl opt">+</span><span class="hl std">Loyal_customer</span><span class="hl opt">+</span><span class="hl std">Bonus_miles</span><span class="hl opt">+</span><span class="hl std">Bonus_trans,</span> <span class="hl kwc">data</span> <span class="hl std">= Airlines_Data)</span>
+<span class="hl kwd">summary</span><span class="hl std">(model.3.a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = Balance ~ Award + cc3_miles + Years_since_enroll + 
+##     Loyal_customer + Bonus_miles + Bonus_trans, data = Airlines_Data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -288330   -40882   -15194    14498  1580027  
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         4.583e+02  3.856e+03   0.119 0.905410    
+## Award              -1.716e+03  3.241e+03  -0.530 0.596466    
+## cc3_miles2         -2.907e+04  5.190e+04  -0.560 0.575476    
+## cc3_miles3         -6.592e+04  4.508e+04  -1.462 0.143739    
+## cc3_miles4          2.278e+04  3.693e+04   0.617 0.537405    
+## cc3_miles5         -1.502e+05  4.079e+04  -3.683 0.000233 ***
+## Years_since_enroll  3.064e+03  3.274e+02   9.358  &lt; 2e-16 ***
+## Loyal_customer      4.024e+03  4.889e+03   0.823 0.410506    
+## Bonus_miles         1.282e+00  7.773e-02  16.488  &lt; 2e-16 ***
+## Bonus_trans         1.218e+03  1.879e+02   6.484    1e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 8057927967)
+## 
+##     Null deviance: 4.0603e+13  on 3998  degrees of freedom
+## Residual deviance: 3.2143e+13  on 3989  degrees of freedom
+## AIC: 102578
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#plot(model.3.a)</span>
+
+<span class="hl kwd">AIC</span><span class="hl std">(model.2.a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 103366.4
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">AIC</span><span class="hl std">(model.3.a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 102577.5
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#3.b. Consider Years_since_enroll in the regression summary.</span>
+<span class="hl com">#3.b.i. Is the number of years a customer has been enrolled significant in predicting their balance? Explain.</span>
+<span class="hl com">#3.b.ii. State precisely the effect number of years since enrollment has on a customer’s predicted balance, according to this model.</span>
+
+<span class="hl com">#3.c. Consider cc3_miles in the regression summary.</span>
+<span class="hl com">#3.c.i. Is the number of miles a customer earned with their Small Business credit card in the past 12 months significant in predicting their balance? Explain.</span>
+<span class="hl com">#3.c.ii. State precisely the effect of earning over 50,000 miles with a Small Business credit card has on predicted balance, according to this model.</span>
+
+<span class="hl com">#3.d. What is the predicted balance for a customer who has:</span>
+<span class="hl com"># Award = 0</span>
+<span class="hl com"># cc3_miles = 3</span>
+<span class="hl com"># Years_since_enroll = 6</span>
+<span class="hl com"># Loyal_customer = 1</span>
+<span class="hl com"># Bonus_miles = 20000</span>
+<span class="hl com"># Bonus_trans = 20</span>
+<span class="hl std">newdata.3.d</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(</span><span class="hl kwc">Award</span> <span class="hl std">=</span> <span class="hl num">0</span><span class="hl std">,</span>
+                         <span class="hl kwc">cc3_miles</span> <span class="hl std">=</span> <span class="hl num">3</span><span class="hl std">,</span>
+                         <span class="hl kwc">Years_since_enroll</span> <span class="hl std">=</span> <span class="hl num">6</span><span class="hl std">,</span>
+                         <span class="hl kwc">Loyal_customer</span> <span class="hl std">=</span> <span class="hl num">1</span><span class="hl std">,</span>
+                         <span class="hl kwc">Bonus_miles</span> <span class="hl std">=</span> <span class="hl num">20000</span><span class="hl std">,</span>
+                         <span class="hl kwc">Bonus_trans</span> <span class="hl std">=</span> <span class="hl num">20</span><span class="hl std">)</span>
+<span class="hl std">newdata.3.d</span><span class="hl opt">$</span><span class="hl std">cc3_miles</span> <span class="hl kwb">=</span> <span class="hl kwd">factor</span><span class="hl std">(newdata.3.d</span><span class="hl opt">$</span><span class="hl std">cc3_miles)</span>
+<span class="hl kwd">predict</span><span class="hl std">(model.3.a,</span><span class="hl kwc">newdata</span> <span class="hl std">= newdata.3.d)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##        1 
+## 6950.428
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#3.e. A senior consultant has indicated that a customer’s balance is more affected by being a loyal customer when</span>
+<span class="hl com">#3.e. that customer also has a large number of bonus non-flight transactions in the last 12 months.</span>
+<span class="hl com">#3.e. Add this domain knowledge to your regression model from (a) and run a new multivariate linear regression.</span>
+<span class="hl com">#3.e.i. Does the consultant appear to be right? Justify your answer.</span>
+<span class="hl com">#3.e.ii. State precisely what effects the number of bonus non-flight transactions now has on Balance.</span>
+<span class="hl std">model.3.e</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(</span><span class="hl kwc">formula</span> <span class="hl std">= Balance</span> <span class="hl opt">~</span> <span class="hl std">Award</span><span class="hl opt">+</span><span class="hl std">cc3_miles</span><span class="hl opt">+</span><span class="hl std">Years_since_enroll</span><span class="hl opt">+</span><span class="hl std">Loyal_customer</span><span class="hl opt">+</span><span class="hl std">Bonus_miles</span><span class="hl opt">+</span><span class="hl std">Bonus_trans</span><span class="hl opt">+</span><span class="hl std">Loyal_customer</span><span class="hl opt">*</span><span class="hl std">Bonus_trans,</span> <span class="hl kwc">data</span> <span class="hl std">= Airlines_Data)</span>
+<span class="hl kwd">summary</span><span class="hl std">(model.3.e)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = Balance ~ Award + cc3_miles + Years_since_enroll + 
+##     Loyal_customer + Bonus_miles + Bonus_trans + Loyal_customer * 
+##     Bonus_trans, data = Airlines_Data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -286083   -39613   -14968    14277  1573194  
+## 
+## Coefficients:
+##                              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                 1.156e+04  4.761e+03   2.429 0.015189 *  
+## Award                      -2.313e+03  3.238e+03  -0.714 0.475093    
+## cc3_miles2                 -2.977e+04  5.180e+04  -0.575 0.565543    
+## cc3_miles3                 -7.112e+04  4.501e+04  -1.580 0.114190    
+## cc3_miles4                  1.906e+04  3.688e+04   0.517 0.605228    
+## cc3_miles5                 -1.506e+05  4.072e+04  -3.700 0.000219 ***
+## Years_since_enroll          3.056e+03  3.268e+02   9.353  &lt; 2e-16 ***
+## Loyal_customer             -1.035e+04  6.079e+03  -1.702 0.088885 .  
+## Bonus_miles                 1.243e+00  7.821e-02  15.889  &lt; 2e-16 ***
+## Bonus_trans                 6.022e+01  3.472e+02   0.173 0.862319    
+## Loyal_customer:Bonus_trans  1.518e+03  3.830e+02   3.963 7.52e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 8028324758)
+## 
+##     Null deviance: 4.0603e+13  on 3998  degrees of freedom
+## Residual deviance: 3.2017e+13  on 3988  degrees of freedom
+## AIC: 102564
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">plot</span><span class="hl std">(model.3.e)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-3.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-4.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-5.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-6.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com">#4.a. The airline CEO is now wondering if you can predict Award using the other variables in the data set.</span>
+<span class="hl com">#4.a. Consider the scatterplot you created in Question 2, part (b).</span>
+<span class="hl com">#4.a. Does it seem appropriate to use linear regression to model this problem? Why or why not?</span>
+<span class="hl com">#nope</span>
+
+<span class="hl com">#4.b. Run a multiple linear regression to predict Award using the variables from Question 3:</span>
+<span class="hl com">#4.b. cc3_miles, Years_since_enroll, Loyal_customer, Bonus_miles, Bonus_trans, and Balance and report the summary.</span>
+<span class="hl std">model.4.b</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(</span><span class="hl kwc">formula</span> <span class="hl std">= Award</span> <span class="hl opt">~</span> <span class="hl std">cc3_miles</span><span class="hl opt">+</span><span class="hl std">Years_since_enroll</span><span class="hl opt">+</span><span class="hl std">Loyal_customer</span><span class="hl opt">+</span><span class="hl std">Bonus_miles</span><span class="hl opt">+</span><span class="hl std">Bonus_trans</span><span class="hl opt">+</span><span class="hl std">Balance,</span> <span class="hl kwc">data</span> <span class="hl std">= Airlines_Data)</span>
+<span class="hl kwd">summary</span><span class="hl std">(model.4.b)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = Award ~ cc3_miles + Years_since_enroll + Loyal_customer + 
+##     Bonus_miles + Bonus_trans + Balance, data = Airlines_Data)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.0316  -0.3232  -0.1995   0.4537   0.9508  
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)         4.031e-02  1.883e-02   2.141  0.03233 *  
+## cc3_miles2         -2.612e-01  2.535e-01  -1.030  0.30292    
+## cc3_miles3         -3.786e-01  2.202e-01  -1.719  0.08563 .  
+## cc3_miles4         -5.490e-01  1.802e-01  -3.046  0.00233 ** 
+## cc3_miles5         -2.177e-01  1.996e-01  -1.091  0.27552    
+## Years_since_enroll  4.352e-03  1.615e-03   2.694  0.00709 ** 
+## Loyal_customer      1.194e-01  2.381e-02   5.016  5.5e-07 ***
+## Bonus_miles         5.230e-06  3.836e-07  13.632  &lt; 2e-16 ***
+## Bonus_trans         8.340e-03  9.134e-04   9.130  &lt; 2e-16 ***
+## Balance            -4.096e-08  7.735e-08  -0.530  0.59647    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 0.1923119)
+## 
+##     Null deviance: 932.52  on 3998  degrees of freedom
+## Residual deviance: 767.13  on 3989  degrees of freedom
+## AIC: 4767.8
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#4.c. What would your model predict for an entirely new customer (0 values for every variable) claiming a travel award?</span>
+<span class="hl com">#4.c. Does this make sense? Explain your answer.</span>
+<span class="hl kwd">hist</span><span class="hl std">(Bonus_trans,</span> <span class="hl kwc">breaks</span> <span class="hl std">=</span> <span class="hl num">100</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_1-7.png" title="plot of chunk BUDT758T_Assignment_1" alt="plot of chunk BUDT758T_Assignment_1" class="plot" /></div></div>
+
+</body>
+</html>
