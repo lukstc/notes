@@ -1,0 +1,485 @@
+<html>
+
+<head>
+<style type="text/css">
+.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.left {
+  text-align: left;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>BUDT758T_Assignment#4</title>
+</head>
+
+<body>
+
+<p>
+<br>BUDT758T_Assignment#4
+<br>Topic: # Decision Tree # KNN # K Nearest Neighbor
+<br>Instructor: Prof. Courtney Paulson 
+<br>Student: Xukun(Frank) LIU <a href='https://www.xukun-liu.com' target='_blank' >www.xukun-liu.com</a>
+<br>Details: <a href='https://drive.google.com/drive/folders/1PjiNLCySFGz6DxjQeb26SDKC4DvqKA6h?usp=sharing' target='_blank'>Data/Response</a>
+</p>
+
+<div class="chunk" id="BUDT758T_Assignment_4"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com"># BUDT758T (0503)</span>
+<span class="hl com"># Assignment #4</span>
+<span class="hl com"># Instructor: Prof. Courtney Paulson</span>
+<span class="hl com"># Student: Xukun LIU</span>
+<span class="hl com"># Topic: Trees, KNN</span>
+
+<span class="hl com"># (1)10 points: Data Preparation</span>
+<span class="hl com"># 1.a. Read the data set into R</span>
+<span class="hl kwd">library</span><span class="hl std">(</span><span class="hl str">'readr'</span><span class="hl std">)</span>
+<span class="hl std">dt</span> <span class="hl kwb">=</span> <span class="hl kwd">read.csv</span><span class="hl std">(</span><span class="hl str">'movies_data.csv'</span><span class="hl std">)</span>
+<span class="hl kwd">getwd</span><span class="hl std">()</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] &quot;/Users/xukun.liu/Google Drive (xukun.liu@rhsmith.umd.edu)/RHSmith-Sync/2-Spring-2019/2-BUDT 758T (0503)/Assignment/Assignment#4&quot;
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">setwd</span><span class="hl std">(</span><span class="hl str">&quot;~/Google Drive (xukun.liu@rhsmith.umd.edu)/RHSmith-Sync/2-Spring-2019/2-BUDT 758T (0503)/Assignment/Assignment#4&quot;</span><span class="hl std">)</span>
+
+<span class="hl com"># 1.b. Change the variable successful to a factor variable. Use this new variable for the remainder of the assignment.</span>
+<span class="hl com"># (Remember to attach it to your data set before partitioning!)</span>
+<span class="hl std">dt</span><span class="hl opt">$</span><span class="hl std">successful</span> <span class="hl kwb">=</span> <span class="hl kwd">factor</span><span class="hl std">(dt</span><span class="hl opt">$</span><span class="hl std">successful)</span>
+<span class="hl com">#dt$month = factor(dt$month)</span>
+<span class="hl com">#dt$year = factor(dt$year)</span>
+
+
+<span class="hl com"># 1.c. Set the seed in R to 3730.</span>
+<span class="hl kwd">set.seed</span><span class="hl std">(</span><span class="hl num">3730</span><span class="hl std">)</span>
+
+<span class="hl com"># 1.d. Randomly partition the data set in the following order</span>
+<span class="hl com"># (note that if you do not follow this order, many of the questions in this assignment will not make sense to you!):</span>
+<span class="hl com"># 1.d.i. Split 25% of the observations in movies_data to use as testing data. Using these observations, create a testing data set called movies_test.</span>
+<span class="hl std">index_test</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(dt),</span><span class="hl num">0.25</span> <span class="hl opt">*</span> <span class="hl kwd">nrow</span><span class="hl std">(dt))</span>
+<span class="hl std">movies_test</span> <span class="hl kwb">=</span> <span class="hl std">dt[index_test,]</span>
+
+<span class="hl com"># 1.d.ii. Save the remaining 75% of the data as movies_rest.</span>
+<span class="hl std">movies_rest</span> <span class="hl kwb">=</span> <span class="hl std">dt[</span><span class="hl opt">-</span><span class="hl std">index_test,]</span>
+
+<span class="hl com"># 1.d.iii. Split 25% of the observations in movies_rest to use as validation data.</span>
+<span class="hl com"># Using these observations, create a validation data set called movies_valid.</span>
+<span class="hl std">index_rest_valid</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest),</span><span class="hl num">0.25</span><span class="hl opt">*</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest))</span>
+<span class="hl std">movies_valid</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest[index_rest_valid,]</span>
+
+<span class="hl com"># 1.d.iv. Save the remaining data as movies_train.</span>
+<span class="hl std">movies_trian</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest[</span><span class="hl opt">-</span><span class="hl std">index_rest_valid,]</span>
+
+<span class="hl com"># 1.e. How many observations do you now have in</span>
+<span class="hl com"># (1) the full data set,</span>
+<span class="hl com"># (2) the training data set,</span>
+<span class="hl com"># (3) the validation data set, and</span>
+<span class="hl com"># (4) the testing data set? </span>
+<span class="hl kwd">print</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(dt))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 3492
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">print</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 2619
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">print</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_trian))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 1965
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">print</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_valid))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 654
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">print</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_test))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 873
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 2.a. Based on the definitions of the variables given above:</span>
+<span class="hl com"># 2.a.i. Should we include both budget and revenue in our tree as possible predictor (X) variables? Why or why not?</span>
+<span class="hl com"># Yes?</span>
+
+<span class="hl com"># 2.a.ii. Should we include title or id in our tree as possible predictor (X) variables? Why or why not?</span>
+<span class="hl com"># No</span>
+
+<span class="hl com"># 2.b. We changed 'successful' to a factor variable in Question 1, part (b) above.</span>
+<span class="hl com"># 2.b.i. Do we need to change any other variables in our data set to factor before we run our tree? Why or why not?</span>
+<span class="hl com"># Yes, Month/Year?</span>
+
+<span class="hl com"># 2.b.ii. If we had not changed successful to a factor, how would our modeling change?</span>
+<span class="hl com"># Could we still predict successful using a tree? Explain your answer.</span>
+<span class="hl com"># Yes</span>
+
+<span class="hl com"># (3)15 points: Build a classification tree to predict successful using all other variables except id, title, and revenue using the training data.</span>
+<span class="hl com"># Run a complete tree rather than defining a stopping rule.</span>
+<span class="hl kwd">library</span><span class="hl std">(tree)</span>
+<span class="hl kwd">colnames</span><span class="hl std">(dt)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  [1] &quot;id&quot;                   &quot;title&quot;                &quot;genre&quot;               
+##  [4] &quot;budget&quot;               &quot;revenue&quot;              &quot;production_companies&quot;
+##  [7] &quot;united_states&quot;        &quot;english&quot;              &quot;title_change&quot;        
+## [10] &quot;popularity&quot;           &quot;vote_average&quot;         &quot;vote_count&quot;          
+## [13] &quot;month&quot;                &quot;year&quot;                 &quot;runtime&quot;             
+## [16] &quot;successful&quot;
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">attach</span><span class="hl std">(movies_trian)</span>
+<span class="hl std">model3</span> <span class="hl kwb">=</span> <span class="hl kwd">tree</span><span class="hl std">(successful</span><span class="hl opt">~</span><span class="hl std">genre</span><span class="hl opt">+</span><span class="hl std">budget</span><span class="hl opt">+</span><span class="hl std">production_companies</span><span class="hl opt">+</span><span class="hl std">united_states</span><span class="hl opt">+</span><span class="hl std">english</span><span class="hl opt">+</span><span class="hl std">title_change</span><span class="hl opt">+</span><span class="hl std">popularity</span><span class="hl opt">+</span><span class="hl std">vote_average</span><span class="hl opt">+</span><span class="hl std">vote_count</span><span class="hl opt">+</span><span class="hl std">month</span><span class="hl opt">+</span><span class="hl std">year</span><span class="hl opt">+</span><span class="hl std">runtime)</span>
+<span class="hl std">model3</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## node), split, n, deviance, yval, (yprob)
+##       * denotes terminal node
+## 
+##  1) root 1965 2607.00 0 ( 0.62137 0.37863 )  
+##    2) vote_count &lt; 393 1178 1054.00 0 ( 0.83531 0.16469 )  
+##      4) vote_count &lt; 68.5 560  261.80 0 ( 0.93750 0.06250 ) *
+##      5) vote_count &gt; 68.5 618  704.80 0 ( 0.74272 0.25728 )  
+##       10) budget &lt; 2.45e+07 392  495.20 0 ( 0.67347 0.32653 ) *
+##       11) budget &gt; 2.45e+07 226  180.70 0 ( 0.86283 0.13717 ) *
+##    3) vote_count &gt; 393 787  963.00 1 ( 0.30114 0.69886 )  
+##      6) vote_count &lt; 957.5 342  473.20 1 ( 0.47368 0.52632 )  
+##       12) budget &lt; 4.6e+07 233  306.80 1 ( 0.36910 0.63090 ) *
+##       13) budget &gt; 4.6e+07 109  133.70 0 ( 0.69725 0.30275 ) *
+##      7) vote_count &gt; 957.5 445  403.70 1 ( 0.16854 0.83146 )  
+##       14) vote_count &lt; 3023 329  348.30 1 ( 0.22188 0.77812 ) *
+##       15) vote_count &gt; 3023 116   20.21 1 ( 0.01724 0.98276 ) *
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">summary</span><span class="hl std">(model3)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Classification tree:
+## tree(formula = successful ~ genre + budget + production_companies + 
+##     united_states + english + title_change + popularity + vote_average + 
+##     vote_count + month + year + runtime)
+## Variables actually used in tree construction:
+## [1] &quot;vote_count&quot; &quot;budget&quot;    
+## Number of terminal nodes:  7 
+## Residual mean deviance:  0.8921 = 1747 / 1958 
+## Misclassification error rate: 0.1975 = 388 / 1965
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">detach</span><span class="hl std">(movies_trian)</span>
+<span class="hl com"># 3.a. Plot the full tree. What size is the tree?</span>
+<span class="hl kwd">plot</span><span class="hl std">(model3)</span>
+<span class="hl kwd">text</span><span class="hl std">(model3)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_4-1.png" title="plot of chunk BUDT758T_Assignment_4" alt="plot of chunk BUDT758T_Assignment_4" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com"># 3.b. According to this tree, which variable in the data set do you think is the most important for deciding if a movie will be very successful or not? Explain your answer.</span>
+<span class="hl com"># vote_count, most frequent</span>
+
+<span class="hl com"># 3.c. Are all the splits in the tree useful at a cutoff of 0.5? Explain your answer.</span>
+<span class="hl com"># (This means did every split in the tree give us additional information/predictive power, assuming we were going to use a cutoff of 0.5 to classify predictions.)</span>
+<span class="hl com"># No</span>
+
+<span class="hl com"># (4) 30 points: Using your classification tree from Question 3,</span>
+<span class="hl com"># consider all possible tree sizes (up to the full tree size) to determine which tree size is best.</span>
+
+<span class="hl com"># 4.a. Before answering this question:</span>
+<span class="hl com"># 4.a.i. Which data set should you use to answer the question?</span>
+<span class="hl com"># movies_valid</span>
+
+<span class="hl com"># 4.a.ii. What is the baseline for this data set?</span>
+<span class="hl com"># The validation acc when tree size = 1</span>
+
+<span class="hl com"># 4.a.iii. What is the baseline accuracy for this data set?</span>
+<span class="hl std">valid_tree1</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(movies_valid</span><span class="hl opt">$</span><span class="hl std">successful)</span>
+<span class="hl std">valid_tree1</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+##   0   1 
+## 399 255
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">print</span><span class="hl std">(valid_tree1[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(valid_tree1))</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##         0 
+## 0.6100917
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 4.b. If you run the prune.tree() command with best=1 and try to calculate accuracy on the tree, you will get an error in R.</span>
+<span class="hl com"># Why? Is this a problem for us if we need to evaluate a tree size of 1?</span>
+<span class="hl std">model4b</span> <span class="hl kwb">=</span> <span class="hl kwd">prune.tree</span><span class="hl std">(model3,</span><span class="hl kwc">best</span> <span class="hl std">=</span> <span class="hl num">1</span><span class="hl std">)</span>
+<span class="hl kwd">summary</span><span class="hl std">(model4b)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##         Length Class      Mode   
+## frame      6   data.frame list   
+## where   1965   -none-     numeric
+## terms      3   terms      call   
+## call       3   -none-     call   
+## y       1965   factor     numeric
+## weights 1965   -none-     numeric
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">plot</span><span class="hl std">(model4b)</span>
+</pre></div>
+<div class="error"><pre class="knitr r">## Error in xy.coords(x, y, xlabel, ylabel, log): 'x' is a list, but does not have components 'x' and 'y'
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">pred4b</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model4b,movies_valid)</span>
+</pre></div>
+<div class="error"><pre class="knitr r">## Error in UseMethod(&quot;predict&quot;): no applicable method for 'predict' applied to an object of class &quot;singlenode&quot;
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 4.c. Choose the best tree size based on accuracy with a cutoff of 0.5. </span>
+<span class="hl com"># 4.c.i. Which size tree did you choose? Why?</span>
+<span class="hl std">nodes4c</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">2</span><span class="hl opt">:</span><span class="hl num">7</span><span class="hl std">)</span>
+<span class="hl std">acc4c</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">2</span><span class="hl opt">:</span><span class="hl num">7</span><span class="hl std">)</span>
+<span class="hl kwa">for</span> <span class="hl std">(i</span> <span class="hl kwa">in</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl opt">:</span><span class="hl kwd">length</span><span class="hl std">(nodes4c))){</span>
+  <span class="hl std">model4c</span> <span class="hl kwb">=</span> <span class="hl kwd">prune.tree</span><span class="hl std">(model3,</span><span class="hl kwc">best</span> <span class="hl std">= nodes4c[i])</span>
+  <span class="hl std">pred4c</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model4c,movies_valid)</span>
+  <span class="hl std">pred4c</span> <span class="hl kwb">=</span> <span class="hl std">pred4c[,</span><span class="hl num">2</span><span class="hl std">]</span>
+  <span class="hl std">pred4c_class</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred4c</span><span class="hl opt">&gt;</span><span class="hl num">0.5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+  <span class="hl std">matrix_4c</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(movies_valid</span><span class="hl opt">$</span><span class="hl std">successful,pred4c_class)</span>
+  <span class="hl std">acc</span> <span class="hl kwb">=</span> <span class="hl std">(matrix_4c[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">+</span><span class="hl std">matrix_4c[</span><span class="hl num">4</span><span class="hl std">])</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(matrix_4c)</span>
+  <span class="hl std">acc4c[i]</span> <span class="hl kwb">=</span> <span class="hl std">acc</span>
+<span class="hl std">}</span>
+<span class="hl std">df_4c</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(nodes4c,acc4c)</span>
+<span class="hl kwd">print</span><span class="hl std">(df_4c)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##   nodes4c     acc4c
+## 1       2 0.7461774
+## 2       3 0.7461774
+## 3       4 0.7461774
+## 4       5 0.7461774
+## 5       6 0.7706422
+## 6       7 0.7706422
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 4.c.ii. Do you think R made a good choice at what size to stop growing the tree? Why or why not?</span>
+<span class="hl com"># NO？</span>
+
+<span class="hl com"># 4.c.iii. Do your accuracy values support your answer to Question 3, part (c) above? Why or why not?</span>
+<span class="hl com"># Yes</span>
+
+<span class="hl com"># 4.d. Retrain the classification tree using the tree size you chose in part (c) and using the full movies_rest data set.</span>
+<span class="hl kwd">attach</span><span class="hl std">(movies_rest)</span>
+<span class="hl std">model4d</span> <span class="hl kwb">=</span> <span class="hl kwd">tree</span><span class="hl std">(successful</span><span class="hl opt">~</span><span class="hl std">genre</span><span class="hl opt">+</span><span class="hl std">budget</span><span class="hl opt">+</span><span class="hl std">production_companies</span><span class="hl opt">+</span><span class="hl std">united_states</span><span class="hl opt">+</span><span class="hl std">english</span><span class="hl opt">+</span><span class="hl std">title_change</span><span class="hl opt">+</span><span class="hl std">popularity</span><span class="hl opt">+</span><span class="hl std">vote_average</span><span class="hl opt">+</span><span class="hl std">vote_count</span><span class="hl opt">+</span><span class="hl std">month</span><span class="hl opt">+</span><span class="hl std">year</span><span class="hl opt">+</span><span class="hl std">runtime)</span>
+<span class="hl std">model4d_pruned</span> <span class="hl kwb">=</span> <span class="hl kwd">prune.tree</span><span class="hl std">(model4d,</span><span class="hl kwc">best</span> <span class="hl std">=</span> <span class="hl num">6</span><span class="hl std">)</span>
+<span class="hl std">model4d_pruned</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## node), split, n, deviance, yval, (yprob)
+##       * denotes terminal node
+## 
+##  1) root 2619 3482.00 0 ( 0.61856 0.38144 )  
+##    2) vote_count &lt; 393.5 1546 1404.00 0 ( 0.83118 0.16882 )  
+##      4) vote_count &lt; 98.5 859  475.40 0 ( 0.92084 0.07916 ) *
+##      5) vote_count &gt; 98.5 687  815.90 0 ( 0.71907 0.28093 ) *
+##    3) vote_count &gt; 393.5 1073 1332.00 1 ( 0.31221 0.68779 )  
+##      6) vote_count &lt; 2607 883 1165.00 1 ( 0.37146 0.62854 )  
+##       12) vote_count &lt; 895.5 437  605.30 1 ( 0.48284 0.51716 )  
+##         24) budget &lt; 4.6e+07 308  409.00 1 ( 0.37987 0.62013 ) *
+##         25) budget &gt; 4.6e+07 129  150.80 0 ( 0.72868 0.27132 ) *
+##       13) vote_count &gt; 895.5 446  513.30 1 ( 0.26233 0.73767 ) *
+##      7) vote_count &gt; 2607 190   59.95 1 ( 0.03684 0.96316 ) *
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">summary</span><span class="hl std">(model4d_pruned)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Classification tree:
+## snip.tree(tree = model4d, nodes = 5L)
+## Variables actually used in tree construction:
+## [1] &quot;vote_count&quot; &quot;budget&quot;    
+## Number of terminal nodes:  6 
+## Residual mean deviance:  0.9278 = 2424 / 2613 
+## Misclassification error rate: 0.205 = 537 / 2619
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">detach</span><span class="hl std">(movies_rest)</span>
+
+<span class="hl com"># 4.d.i. Plot both the new tree and the equivalent tree from the training data (the tree of the same size) below.</span>
+<span class="hl com"># Do you think the trees agree with one another? Explain your answer.</span>
+<span class="hl kwd">par</span><span class="hl std">(</span><span class="hl kwc">mfrow</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">2</span><span class="hl std">))</span>
+<span class="hl kwd">plot</span><span class="hl std">(</span><span class="hl kwd">prune.tree</span><span class="hl std">(model3,</span><span class="hl kwc">best</span> <span class="hl std">=</span> <span class="hl num">6</span><span class="hl std">))</span>
+<span class="hl kwd">text</span><span class="hl std">(</span><span class="hl kwd">prune.tree</span><span class="hl std">(model3,</span><span class="hl kwc">best</span> <span class="hl std">=</span> <span class="hl num">6</span><span class="hl std">))</span>
+<span class="hl kwd">plot</span><span class="hl std">(model4d_pruned)</span>
+<span class="hl kwd">text</span><span class="hl std">(model4d_pruned)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_4-2.png" title="plot of chunk BUDT758T_Assignment_4" alt="plot of chunk BUDT758T_Assignment_4" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl kwd">par</span><span class="hl std">(</span><span class="hl kwc">mfrow</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">))</span>
+
+<span class="hl com"># 4.d.ii. In your opinion (note that there is no right or wrong answer here!), was retraining the tree a useful step here? Why or why not?</span>
+<span class="hl com"># Yes</span>
+
+<span class="hl com"># (5) 15 points: Run the kNN algorithm for classification on the training data with the numeric variables in the data set (except revenue).</span>
+<span class="hl com"># Run the algorithm five times with five different values of k: 1, 3, 5, 10, and 25.</span>
+<span class="hl kwd">library</span><span class="hl std">(class)</span>
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: package 'class' was built under R version 3.5.2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">dt_scale</span> <span class="hl kwb">=</span> <span class="hl std">dt</span>
+<span class="hl kwd">names</span><span class="hl std">(dt_scale)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  [1] &quot;id&quot;                   &quot;title&quot;                &quot;genre&quot;               
+##  [4] &quot;budget&quot;               &quot;revenue&quot;              &quot;production_companies&quot;
+##  [7] &quot;united_states&quot;        &quot;english&quot;              &quot;title_change&quot;        
+## [10] &quot;popularity&quot;           &quot;vote_average&quot;         &quot;vote_count&quot;          
+## [13] &quot;month&quot;                &quot;year&quot;                 &quot;runtime&quot;             
+## [16] &quot;successful&quot;
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">cols_scale</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;budget&quot;</span><span class="hl std">,</span><span class="hl str">&quot;revenue&quot;</span><span class="hl std">,</span><span class="hl str">&quot;production_companies&quot;</span><span class="hl std">,</span><span class="hl str">&quot;popularity&quot;</span><span class="hl std">,</span><span class="hl str">&quot;vote_average&quot;</span><span class="hl std">,</span><span class="hl str">&quot;vote_count&quot;</span><span class="hl std">,</span><span class="hl str">&quot;month&quot;</span><span class="hl std">,</span><span class="hl str">&quot;year&quot;</span><span class="hl std">,</span><span class="hl str">&quot;runtime&quot;</span><span class="hl std">)</span>
+<span class="hl kwa">for</span> <span class="hl std">(col_name</span> <span class="hl kwa">in</span> <span class="hl std">cols_scale){</span>
+  <span class="hl std">dt_scale[,col_name]</span>  <span class="hl kwb">=</span> <span class="hl std">(dt_scale[,col_name]</span> <span class="hl opt">-</span> <span class="hl kwd">min</span><span class="hl std">(dt_scale[,col_name]))</span><span class="hl opt">/</span><span class="hl std">(</span><span class="hl kwd">max</span><span class="hl std">(dt_scale[,col_name])</span><span class="hl opt">-</span><span class="hl std">(</span><span class="hl kwd">min</span><span class="hl std">(dt_scale[,col_name])))</span>
+<span class="hl std">}</span>
+
+<span class="hl std">index_test_scale</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(dt_scale),</span><span class="hl num">0.25</span> <span class="hl opt">*</span> <span class="hl kwd">nrow</span><span class="hl std">(dt_scale))</span>
+
+<span class="hl std">movies_test_scale</span> <span class="hl kwb">=</span> <span class="hl std">dt_scale[index_test_scale,]</span>
+<span class="hl std">movies_rest_scale</span> <span class="hl kwb">=</span> <span class="hl std">dt_scale[</span><span class="hl opt">-</span><span class="hl std">index_test_scale,]</span>
+
+<span class="hl std">index_rest_valid_sacle</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest_scale),</span><span class="hl num">0.25</span><span class="hl opt">*</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest_scale))</span>
+<span class="hl std">movies_valid_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest_scale[index_rest_valid_sacle,]</span>
+<span class="hl std">movies_trian_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest_scale[</span><span class="hl opt">-</span><span class="hl std">index_rest_valid_sacle,]</span>
+
+<span class="hl std">x_train_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_trian_scale[,</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl num">6</span><span class="hl std">,</span><span class="hl num">10</span><span class="hl std">,</span><span class="hl num">11</span><span class="hl std">,</span><span class="hl num">12</span><span class="hl std">,</span><span class="hl num">13</span><span class="hl std">,</span><span class="hl num">14</span><span class="hl std">,</span><span class="hl num">15</span><span class="hl std">)]</span>
+<span class="hl std">x_valid_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_valid_scale[,</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl num">6</span><span class="hl std">,</span><span class="hl num">10</span><span class="hl std">,</span><span class="hl num">11</span><span class="hl std">,</span><span class="hl num">12</span><span class="hl std">,</span><span class="hl num">13</span><span class="hl std">,</span><span class="hl num">14</span><span class="hl std">,</span><span class="hl num">15</span><span class="hl std">)]</span>
+<span class="hl std">x_rest_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest_scale[,</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl num">6</span><span class="hl std">,</span><span class="hl num">10</span><span class="hl std">,</span><span class="hl num">11</span><span class="hl std">,</span><span class="hl num">12</span><span class="hl std">,</span><span class="hl num">13</span><span class="hl std">,</span><span class="hl num">14</span><span class="hl std">,</span><span class="hl num">15</span><span class="hl std">)]</span>
+<span class="hl std">x_test_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_test_scale[,</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl num">6</span><span class="hl std">,</span><span class="hl num">10</span><span class="hl std">,</span><span class="hl num">11</span><span class="hl std">,</span><span class="hl num">12</span><span class="hl std">,</span><span class="hl num">13</span><span class="hl std">,</span><span class="hl num">14</span><span class="hl std">,</span><span class="hl num">15</span><span class="hl std">)]</span>
+
+<span class="hl std">train_success_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_trian_scale</span><span class="hl opt">$</span><span class="hl std">successful</span>
+<span class="hl std">valid_success_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_valid_scale</span><span class="hl opt">$</span><span class="hl std">successful</span>
+<span class="hl std">rest_success_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest_scale</span><span class="hl opt">$</span><span class="hl std">successful</span>
+<span class="hl std">test_success_scale</span> <span class="hl kwb">=</span> <span class="hl std">movies_test_scale</span><span class="hl opt">$</span><span class="hl std">successful</span>
+
+<span class="hl com"># 5.a. Using accuracy and a cutoff of 0.5, what is the best value of k? How do you know?</span>
+<span class="hl std">Ks</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">3</span><span class="hl std">,</span><span class="hl num">5</span><span class="hl std">,</span><span class="hl num">10</span><span class="hl std">,</span><span class="hl num">25</span><span class="hl std">)</span>
+<span class="hl std">acc_5a</span> <span class="hl kwb">=</span> <span class="hl kwa">NULL</span>
+<span class="hl kwa">for</span> <span class="hl std">(i</span> <span class="hl kwa">in</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl opt">:</span><span class="hl kwd">length</span><span class="hl std">(Ks))){</span>
+  <span class="hl std">model_5a</span> <span class="hl kwb">=</span> <span class="hl kwd">knn</span><span class="hl std">(x_train_scale,x_valid_sacle,train_success_scale,</span><span class="hl kwc">k</span> <span class="hl std">= Ks[i],</span><span class="hl kwc">use.all</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">)</span>
+  <span class="hl std">table_5a</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(model_5a,valid_success_scale,</span><span class="hl kwc">dnn</span> <span class="hl std">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">'Predicted'</span><span class="hl std">,</span><span class="hl str">'Actual'</span><span class="hl std">))</span>
+  <span class="hl std">acc_temp</span> <span class="hl kwb">=</span> <span class="hl std">(table_5a[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">+</span><span class="hl std">table_5a[</span><span class="hl num">4</span><span class="hl std">])</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(table_5a)</span>
+  <span class="hl com">#print(acc_temp)</span>
+  <span class="hl std">acc_5a</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(acc_5a,acc_temp)</span>
+<span class="hl std">}</span>
+<span class="hl std">df_5a</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(Ks,acc_5a)</span>
+<span class="hl kwd">print</span><span class="hl std">(df_5a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##   Ks    acc_5a
+## 1  1 0.5474006
+## 2  3 0.5611621
+## 3  5 0.5764526
+## 4 10 0.5718654
+## 5 25 0.5917431
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 5.b. Based on your accuracy results (and a cutoff of 0.5), would you suggest trying a value of k higher than 25? Why or why not?</span>
+<span class="hl com"># No</span>
+
+<span class="hl com"># (6)10 points: Consider your retrained tree and your best kNN (meaning kNN with your optimal value of k).</span>
+<span class="hl com"># 6.a. Are these guaranteed to be the best tree model and the best kNN for this data? Explain your answer.</span>
+<span class="hl com"># No</span>
+<span class="hl std">Ks_6a</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">23</span><span class="hl opt">:</span><span class="hl num">50</span><span class="hl std">)</span>
+<span class="hl std">cutoff</span> <span class="hl kwb">=</span> <span class="hl num">0.5</span>
+<span class="hl std">acc_6a</span> <span class="hl kwb">=</span> <span class="hl kwa">NULL</span>
+<span class="hl kwa">for</span> <span class="hl std">(i</span> <span class="hl kwa">in</span> <span class="hl std">Ks_6a){</span>
+  <span class="hl std">model_6a</span> <span class="hl kwb">=</span> <span class="hl kwd">knn</span><span class="hl std">(x_train_scale,x_valid_sacle,train_success_scale,</span><span class="hl kwc">k</span> <span class="hl std">= i,</span><span class="hl kwc">use.all</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">)</span>
+  <span class="hl std">table_6a</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(model_6a,valid_success_scale,</span><span class="hl kwc">dnn</span> <span class="hl std">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">'Predicted'</span><span class="hl std">,</span><span class="hl str">'Actual'</span><span class="hl std">))</span>
+  <span class="hl std">acc_temp</span> <span class="hl kwb">=</span> <span class="hl std">(table_6a[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">+</span><span class="hl std">table_6a[</span><span class="hl num">4</span><span class="hl std">])</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(table_6a)</span>
+  <span class="hl com"># print(acc_temp)</span>
+  <span class="hl std">acc_6a</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(acc_6a,acc_temp)</span>
+<span class="hl std">}</span>
+<span class="hl std">df_6a</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(Ks_6a,acc_6a)</span>
+<span class="hl kwd">print</span><span class="hl std">(df_6a)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##    Ks_6a    acc_6a
+## 1     23 0.5902141
+## 2     24 0.5886850
+## 3     25 0.5917431
+## 4     26 0.5886850
+## 5     27 0.5825688
+## 6     28 0.5917431
+## 7     29 0.5948012
+## 8     30 0.5948012
+## 9     31 0.5993884
+## 10    32 0.6009174
+## 11    33 0.5963303
+## 12    34 0.5978593
+## 13    35 0.5978593
+## 14    36 0.5963303
+## 15    37 0.6009174
+## 16    38 0.5963303
+## 17    39 0.6009174
+## 18    40 0.6009174
+## 19    41 0.6055046
+## 20    42 0.6070336
+## 21    43 0.6070336
+## 22    44 0.5963303
+## 23    45 0.6055046
+## 24    46 0.6024465
+## 25    47 0.5993884
+## 26    48 0.5993884
+## 27    49 0.5993884
+## 28    50 0.5978593
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 6.b. Which of the two models would you suggest we use in practice? Explain your answer.</span>
+<span class="hl std">pred_6b_tree</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model4d_pruned, movies_test)</span>
+<span class="hl std">pred_6b_tree_class</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_6b_tree[,</span><span class="hl num">2</span><span class="hl std">]</span><span class="hl opt">&gt;</span><span class="hl num">0.5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl std">table_6b_tree</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(pred_6b_tree_class,movies_test</span><span class="hl opt">$</span><span class="hl std">successful)</span>
+<span class="hl std">table_6b_tree</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##                   
+## pred_6b_tree_class   0   1
+##                  0 464 109
+##                  1  79 221
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">acc_6b_tree</span> <span class="hl kwb">=</span> <span class="hl std">(table_6b_tree[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">+</span><span class="hl std">table_6b_tree[</span><span class="hl num">4</span><span class="hl std">])</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(table_6b_tree)</span>
+<span class="hl std">acc_6b_tree</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.7846506
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">pred_6b_knn</span> <span class="hl kwb">=</span> <span class="hl kwd">knn</span><span class="hl std">(x_rest_scale,x_test_scale,rest_success_scale,</span><span class="hl kwc">k</span> <span class="hl std">=</span> <span class="hl num">43</span><span class="hl std">,</span><span class="hl kwc">use.all</span> <span class="hl std">=</span> <span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">table_6b_knn</span> <span class="hl kwb">=</span> <span class="hl kwd">table</span><span class="hl std">(pred_6b_knn,test_success_scale)</span>
+<span class="hl std">table_6b_knn</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##            test_success_scale
+## pred_6b_knn   0   1
+##           0 513 224
+##           1  29 107
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">acc_6b_knn</span> <span class="hl kwb">=</span> <span class="hl std">(table_6b_knn[</span><span class="hl num">1</span><span class="hl std">]</span><span class="hl opt">+</span><span class="hl std">table_6b_knn[</span><span class="hl num">4</span><span class="hl std">])</span><span class="hl opt">/</span><span class="hl kwd">sum</span><span class="hl std">(table_6b_knn)</span>
+<span class="hl std">acc_6b_knn</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.7101947
+</pre></div>
+</div></div>
+
+</body>
+</html>
