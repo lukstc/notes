@@ -1,0 +1,1437 @@
+<html>
+
+<head>
+<style type="text/css">
+.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.left {
+  text-align: left;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>BUDT758T_Assignment#5</title>
+</head>
+
+<body>
+
+<p>
+<br>BUDT758T_Assignment#5
+<br>Topic: #LASSO #Ridge
+<br>Instructor: Prof. Courtney Paulson 
+<br>Student: Xukun(Frank) LIU <a href='https://www.xukun-liu.com' target='_blank' >www.xukun-liu.com</a>
+<br>Details: <a href='https://drive.google.com/drive/folders/1cxtoHhZ5CWpcfFkCGlV_ou0ZYSeqwA_3?usp=sharing' target='_blank'>Data/Response</a>
+</p>
+
+<div class="chunk" id="BUDT758T_Assignment_5"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com"># BUDY758T</span>
+<span class="hl com"># Assignment #5</span>
+<span class="hl com"># Xukun LIU</span>
+<span class="hl com"># Topic: Ridge Regression / LASSO Regression</span>
+
+<span class="hl com"># (1) 15 points: Data Preparation</span>
+<span class="hl com"># Read the data set into R. Remember to use read.csv() rather than importing it from the folder directly (which uses read_csv()) to make sure you do not encounter NA values!</span>
+<span class="hl std">dt</span> <span class="hl kwb">=</span> <span class="hl kwd">read.csv</span><span class="hl std">(</span><span class="hl str">'movies_data.csv'</span><span class="hl std">)</span>
+
+<span class="hl com"># Change the month variable to a factor variable.</span>
+<span class="hl std">dt</span><span class="hl opt">$</span><span class="hl std">month</span> <span class="hl kwb">=</span> <span class="hl kwd">as.factor</span><span class="hl std">(dt</span><span class="hl opt">$</span><span class="hl std">month)</span>
+
+<span class="hl com"># Set the seed in R to 6022.</span>
+<span class="hl kwd">set.seed</span><span class="hl std">(</span><span class="hl num">6022</span><span class="hl std">)</span>
+
+<span class="hl com"># Randomly partition the data set in the following order</span>
+<span class="hl com"># (note that if you do not follow this order, many of the questions in this assignment will not make sense to you!):</span>
+<span class="hl com"># Split 30% of the observations in movies_data to use as testing data.</span>
+<span class="hl com"># Using these observations,</span>
+<span class="hl com"># create a testing data set called movies_test.</span>
+<span class="hl std">index_test</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(dt),</span><span class="hl num">0.3</span><span class="hl opt">*</span><span class="hl kwd">nrow</span><span class="hl std">(dt))</span>
+<span class="hl std">movies_test</span> <span class="hl kwb">=</span> <span class="hl std">dt[index_test,]</span>
+<span class="hl com"># Save the remaining 70% of the data as movies_rest.</span>
+<span class="hl std">movies_rest</span> <span class="hl kwb">=</span> <span class="hl std">dt[</span><span class="hl opt">-</span><span class="hl std">index_test,]</span>
+<span class="hl com"># Split 20% of the observations in movies_rest to use as validation data.</span>
+<span class="hl com"># Using these observations, create a validation data set called movies_valid.</span>
+<span class="hl std">index_valid</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest),</span><span class="hl num">0.2</span><span class="hl opt">*</span><span class="hl kwd">nrow</span><span class="hl std">(movies_rest))</span>
+<span class="hl std">movies_valid</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest[index_valid,]</span>
+<span class="hl com"># Save the remaining data as movies_train.</span>
+<span class="hl std">movies_train</span> <span class="hl kwb">=</span> <span class="hl std">movies_rest[</span><span class="hl opt">-</span><span class="hl std">index_valid,]</span>
+<span class="hl com"># Compared to Assignment 4, we have more testing data but less validation data.</span>
+<span class="hl com"># Given the methods we want to consider in this assignment (stepwise regression, LASSO, and Ridge regression) compared to the methods used in the previous assignment (trees and KNN), why might we have made this change?</span>
+
+<span class="hl com"># (2) 20 points: Run a regression procedure to predict revenue from all other variables</span>
+<span class="hl com"># except id, title, and successful on the training data using:</span>
+<span class="hl com"># Backward elimination</span>
+<span class="hl com"># Forward selection</span>
+<span class="hl std">model_linear_full</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(revenue</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">successful),</span><span class="hl kwc">data</span> <span class="hl std">= movies_train)</span>
+<span class="hl std">model_linear_empt</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(revenue</span><span class="hl opt">~</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl kwc">data</span> <span class="hl std">= movies_train)</span>
+<span class="hl std">model_linear_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">step</span><span class="hl std">(model_linear_full,</span><span class="hl kwc">direction</span> <span class="hl std">=</span> <span class="hl str">'backward'</span><span class="hl std">,</span><span class="hl kwc">trace</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Start:  AIC=77126.09
+## revenue ~ (id + title + genre + budget + production_companies + 
+##     united_states + english + title_change + popularity + vote_average + 
+##     vote_count + month + year + runtime + successful) - (id + 
+##     title + successful)
+## 
+##                        Df   Deviance   AIC
+## - month                11 1.4831e+19 77115
+## - title_change          1 1.4747e+19 77124
+## - runtime               1 1.4747e+19 77124
+## - united_states         1 1.4759e+19 77126
+## - english               1 1.4760e+19 77126
+## &lt;none&gt;                    1.4747e+19 77126
+## - vote_average          1 1.4791e+19 77130
+## - year                  1 1.4817e+19 77133
+## - production_companies  1 1.4855e+19 77138
+## - genre                10 1.5257e+19 77173
+## - popularity            1 1.5139e+19 77175
+## - budget                1 1.8847e+19 77604
+## - vote_count            1 2.0151e+19 77735
+## 
+## Step:  AIC=77115.2
+## revenue ~ genre + budget + production_companies + united_states + 
+##     english + title_change + popularity + vote_average + vote_count + 
+##     year + runtime
+## 
+##                        Df   Deviance   AIC
+## - title_change          1 1.4831e+19 77113
+## - runtime               1 1.4831e+19 77113
+## - english               1 1.4842e+19 77115
+## - united_states         1 1.4846e+19 77115
+## &lt;none&gt;                    1.4831e+19 77115
+## - vote_average          1 1.4876e+19 77119
+## - year                  1 1.4907e+19 77123
+## - production_companies  1 1.4944e+19 77128
+## - genre                10 1.5349e+19 77162
+## - popularity            1 1.5230e+19 77165
+## - budget                1 1.9161e+19 77614
+## - vote_count            1 2.0247e+19 77722
+## 
+## Step:  AIC=77113.21
+## revenue ~ genre + budget + production_companies + united_states + 
+##     english + popularity + vote_average + vote_count + year + 
+##     runtime
+## 
+##                        Df   Deviance   AIC
+## - runtime               1 1.4831e+19 77111
+## - english               1 1.4844e+19 77113
+## &lt;none&gt;                    1.4831e+19 77113
+## - united_states         1 1.4848e+19 77113
+## - vote_average          1 1.4876e+19 77117
+## - year                  1 1.4907e+19 77121
+## - production_companies  1 1.4946e+19 77126
+## - genre                10 1.5354e+19 77161
+## - popularity            1 1.5231e+19 77163
+## - budget                1 1.9183e+19 77615
+## - vote_count            1 2.0252e+19 77721
+## 
+## Step:  AIC=77111.28
+## revenue ~ genre + budget + production_companies + united_states + 
+##     english + popularity + vote_average + vote_count + year
+## 
+##                        Df   Deviance   AIC
+## - english               1 1.4845e+19 77111
+## &lt;none&gt;                    1.4831e+19 77111
+## - united_states         1 1.4848e+19 77111
+## - vote_average          1 1.4877e+19 77115
+## - year                  1 1.4908e+19 77119
+## - production_companies  1 1.4946e+19 77124
+## - popularity            1 1.5231e+19 77161
+## - genre                10 1.5378e+19 77162
+## - budget                1 1.9533e+19 77648
+## - vote_count            1 2.0298e+19 77723
+## 
+## Step:  AIC=77111.04
+## revenue ~ genre + budget + production_companies + united_states + 
+##     popularity + vote_average + vote_count + year
+## 
+##                        Df   Deviance   AIC
+## &lt;none&gt;                    1.4845e+19 77111
+## - united_states         1 1.4888e+19 77115
+## - vote_average          1 1.4890e+19 77115
+## - year                  1 1.4922e+19 77119
+## - production_companies  1 1.4963e+19 77125
+## - popularity            1 1.5242e+19 77161
+## - genre                10 1.5394e+19 77162
+## - budget                1 1.9536e+19 77646
+## - vote_count            1 2.0313e+19 77722
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model_linear_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">step</span><span class="hl std">(model_linear_empt,</span><span class="hl kwc">scope</span> <span class="hl std">=</span> <span class="hl kwd">list</span><span class="hl std">(</span><span class="hl kwc">upper</span><span class="hl std">=model_linear_full),</span><span class="hl kwc">direction</span><span class="hl std">=</span><span class="hl str">'forward'</span><span class="hl std">,</span><span class="hl kwc">trace</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Start:  AIC=79924.83
+## revenue ~ 1
+## 
+##                        Df   Deviance   AIC
+## + vote_count            1 2.2280e+19 77873
+## + budget                1 2.7951e+19 78317
+## + popularity            1 3.5925e+19 78808
+## + genre                10 5.4218e+19 79631
+## + runtime               1 5.7774e+19 79737
+## + month                11 5.9852e+19 79826
+## + vote_average          1 6.0505e+19 79827
+## + united_states         1 6.1145e+19 79848
+## + production_companies  1 6.2415e+19 79888
+## + english               1 6.2828e+19 79901
+## + title_change          1 6.3075e+19 79909
+## + year                  1 6.3287e+19 79915
+## &lt;none&gt;                    6.3661e+19 79925
+## 
+## Step:  AIC=77873.31
+## revenue ~ vote_count
+## 
+##                        Df   Deviance   AIC
+## + budget                1 1.6126e+19 77243
+## + genre                10 2.0316e+19 77713
+## + popularity            1 2.1657e+19 77820
+## + month                11 2.1727e+19 77846
+## + vote_average          1 2.2157e+19 77864
+## + united_states         1 2.2166e+19 77865
+## + year                  1 2.2167e+19 77865
+## + runtime               1 2.2242e+19 77872
+## &lt;none&gt;                    2.2280e+19 77873
+## + title_change          1 2.2264e+19 77874
+## + english               1 2.2271e+19 77874
+## + production_companies  1 2.2278e+19 77875
+## 
+## Step:  AIC=77243.03
+## revenue ~ vote_count + budget
+## 
+##                        Df   Deviance   AIC
+## + genre                10 1.5457e+19 77180
+## + popularity            1 1.5752e+19 77199
+## + production_companies  1 1.5930e+19 77221
+## + runtime               1 1.6053e+19 77236
+## + english               1 1.6089e+19 77241
+## + year                  1 1.6094e+19 77241
+## + vote_average          1 1.6094e+19 77241
+## + united_states         1 1.6108e+19 77243
+## &lt;none&gt;                    1.6126e+19 77243
+## + title_change          1 1.6119e+19 77244
+## + month                11 1.6013e+19 77251
+## 
+## Step:  AIC=77180.15
+## revenue ~ vote_count + budget + genre
+## 
+##                        Df   Deviance   AIC
+## + popularity            1 1.5134e+19 77141
+## + production_companies  1 1.5337e+19 77167
+## + vote_average          1 1.5414e+19 77177
+## + year                  1 1.5419e+19 77177
+## + english               1 1.5427e+19 77178
+## + united_states         1 1.5440e+19 77180
+## &lt;none&gt;                    1.5457e+19 77180
+## + runtime               1 1.5453e+19 77182
+## + title_change          1 1.5455e+19 77182
+## + month                11 1.5357e+19 77189
+## 
+## Step:  AIC=77140.76
+## revenue ~ vote_count + budget + genre + popularity
+## 
+##                        Df   Deviance   AIC
+## + production_companies  1 1.4983e+19 77123
+## + year                  1 1.5071e+19 77135
+## + vote_average          1 1.5082e+19 77136
+## + english               1 1.5096e+19 77138
+## + united_states         1 1.5110e+19 77140
+## &lt;none&gt;                    1.5134e+19 77141
+## + title_change          1 1.5131e+19 77142
+## + runtime               1 1.5131e+19 77142
+## + month                11 1.5039e+19 77150
+## 
+## Step:  AIC=77123.23
+## revenue ~ vote_count + budget + genre + popularity + production_companies
+## 
+##                 Df   Deviance   AIC
+## + year           1 1.4929e+19 77118
+## + english        1 1.4948e+19 77121
+## + united_states  1 1.4951e+19 77121
+## + vote_average   1 1.4957e+19 77122
+## &lt;none&gt;             1.4983e+19 77123
+## + title_change   1 1.4971e+19 77124
+## + runtime        1 1.4983e+19 77125
+## + month         11 1.4896e+19 77134
+## 
+## Step:  AIC=77118.11
+## revenue ~ vote_count + budget + genre + popularity + production_companies + 
+##     year
+## 
+##                 Df   Deviance   AIC
+## + vote_average   1 1.4888e+19 77115
+## + united_states  1 1.4890e+19 77115
+## + english        1 1.4891e+19 77115
+## &lt;none&gt;             1.4929e+19 77118
+## + title_change   1 1.4915e+19 77118
+## + runtime        1 1.4928e+19 77120
+## + month         11 1.4845e+19 77129
+## 
+## Step:  AIC=77114.73
+## revenue ~ vote_count + budget + genre + popularity + production_companies + 
+##     year + vote_average
+## 
+##                 Df   Deviance   AIC
+## + united_states  1 1.4845e+19 77111
+## + english        1 1.4848e+19 77111
+## + title_change   1 1.4869e+19 77114
+## &lt;none&gt;             1.4888e+19 77115
+## + runtime        1 1.4887e+19 77117
+## + month         11 1.4805e+19 77126
+## 
+## Step:  AIC=77111.04
+## revenue ~ vote_count + budget + genre + popularity + production_companies + 
+##     year + vote_average + united_states
+## 
+##                Df   Deviance   AIC
+## &lt;none&gt;            1.4845e+19 77111
+## + english       1 1.4831e+19 77111
+## + title_change  1 1.4842e+19 77113
+## + runtime       1 1.4844e+19 77113
+## + month        11 1.4764e+19 77122
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># Which variable did backward elimination eliminate first?</span>
+<span class="hl com"># variable: month</span>
+
+<span class="hl com"># Which variable did forward selection select first?</span>
+<span class="hl com"># variable: vote</span>
+
+<span class="hl com"># Consider the final model for both step procedures. What type of model did you get?</span>
+<span class="hl com"># linear regression model</span>
+
+<span class="hl com"># Based on these results, do you think we should also consider running a stepwise forward </span>
+<span class="hl com"># or stepwise backward procedure? Explain your answer.</span>
+<span class="hl kwd">summary</span><span class="hl std">(model_linear_backward)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = revenue ~ genre + budget + production_companies + 
+##     united_states + popularity + vote_average + vote_count + 
+##     year, data = movies_train)
+## 
+## Deviance Residuals: 
+##        Min          1Q      Median          3Q         Max  
+## -689385759   -25856239     3579606    23788338  1582959457  
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           2.843e+09  8.946e+08   3.177 0.001509 ** 
+## genreAdventure       -1.071e+08  3.954e+07  -2.710 0.006792 ** 
+## genreAnimation        6.807e+07  9.486e+06   7.176 1.02e-12 ***
+## genreComedy           2.257e+07  6.621e+06   3.408 0.000668 ***
+## genreDocumentary      3.689e+07  1.488e+07   2.480 0.013222 *  
+## genreDrama            1.383e+07  5.656e+06   2.445 0.014587 *  
+## genreFantasy          5.667e+07  2.087e+07   2.716 0.006672 ** 
+## genreHorror           1.772e+07  1.368e+07   1.296 0.195295    
+## genreOther            1.491e+07  1.798e+07   0.829 0.407107    
+## genreRomance          5.039e+07  3.942e+07   1.278 0.201304    
+## genreThriller         1.505e+07  9.208e+06   1.635 0.102277    
+## budget                1.607e+00  6.495e-02  24.749  &lt; 2e-16 ***
+## production_companies -3.448e+06  8.779e+05  -3.928 8.86e-05 ***
+## united_statesYes     -1.261e+07  5.306e+06  -2.376 0.017586 *  
+## popularity            5.897e+05  8.184e+04   7.206 8.23e-13 ***
+## vote_average         -4.634e+06  1.904e+06  -2.433 0.015049 *  
+## vote_count            6.712e+04  2.512e+03  26.718  &lt; 2e-16 ***
+## year                 -1.413e+06  4.447e+05  -3.179 0.001503 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 7.659792e+15)
+## 
+##     Null deviance: 6.3661e+19  on 1955  degrees of freedom
+## Residual deviance: 1.4845e+19  on 1938  degrees of freedom
+## AIC: 77111
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">summary</span><span class="hl std">(model_linear_forward)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## glm(formula = revenue ~ vote_count + budget + genre + popularity + 
+##     production_companies + year + vote_average + united_states, 
+##     data = movies_train)
+## 
+## Deviance Residuals: 
+##        Min          1Q      Median          3Q         Max  
+## -689385759   -25856239     3579606    23788338  1582959457  
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           2.843e+09  8.946e+08   3.177 0.001509 ** 
+## vote_count            6.712e+04  2.512e+03  26.718  &lt; 2e-16 ***
+## budget                1.607e+00  6.495e-02  24.749  &lt; 2e-16 ***
+## genreAdventure       -1.071e+08  3.954e+07  -2.710 0.006792 ** 
+## genreAnimation        6.807e+07  9.486e+06   7.176 1.02e-12 ***
+## genreComedy           2.257e+07  6.621e+06   3.408 0.000668 ***
+## genreDocumentary      3.689e+07  1.488e+07   2.480 0.013222 *  
+## genreDrama            1.383e+07  5.656e+06   2.445 0.014587 *  
+## genreFantasy          5.667e+07  2.087e+07   2.716 0.006672 ** 
+## genreHorror           1.772e+07  1.368e+07   1.296 0.195295    
+## genreOther            1.491e+07  1.798e+07   0.829 0.407107    
+## genreRomance          5.039e+07  3.942e+07   1.278 0.201304    
+## genreThriller         1.505e+07  9.208e+06   1.635 0.102277    
+## popularity            5.897e+05  8.184e+04   7.206 8.23e-13 ***
+## production_companies -3.448e+06  8.779e+05  -3.928 8.86e-05 ***
+## year                 -1.413e+06  4.447e+05  -3.179 0.001503 ** 
+## vote_average         -4.634e+06  1.904e+06  -2.433 0.015049 *  
+## united_statesYes     -1.261e+07  5.306e+06  -2.376 0.017586 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 7.659792e+15)
+## 
+##     Null deviance: 6.3661e+19  on 1955  degrees of freedom
+## Residual deviance: 1.4845e+19  on 1938  degrees of freedom
+## AIC: 77111
+## 
+## Number of Fisher Scoring iterations: 2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># No, we do not need to: the final result are the same</span>
+
+<span class="hl com"># Choose the best of the two models based on the prediction.</span>
+<span class="hl com"># Which model did you choose?</span>
+<span class="hl com"># What measure did you use for prediction?</span>
+<span class="hl com"># What was the value of that measure for this model?</span>
+<span class="hl std">pred_model_linear_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_linear_backward,movies_valid)</span>
+<span class="hl std">pred_model_linear_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_linear_forward,movies_valid)</span>
+<span class="hl kwd">library</span><span class="hl std">(Metrics)</span>
+
+<span class="hl kwd">rmse</span><span class="hl std">(pred_model_linear_backward,movies_valid</span><span class="hl opt">$</span><span class="hl std">revenue)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 74620182
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">rmse</span><span class="hl std">(pred_model_linear_forward,movies_valid</span><span class="hl opt">$</span><span class="hl std">revenue)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 74620182
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># ??????</span>
+
+<span class="hl com"># (3)20 points: Run a regression procedure to predict successful from all other variables</span>
+<span class="hl com"># except id, title, and revenue on the training data using:</span>
+<span class="hl com"># Backward stepwise</span>
+<span class="hl com"># Forward stepwise</span>
+<span class="hl std">model_logistic_full</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(successful</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue),</span><span class="hl kwc">data</span> <span class="hl std">= movies_train,</span><span class="hl kwc">family</span> <span class="hl std">=</span> <span class="hl str">'binomial'</span><span class="hl std">)</span>
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model_logistic_empt</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(successful</span><span class="hl opt">~</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl kwc">data</span> <span class="hl std">= movies_train,</span><span class="hl kwc">family</span> <span class="hl std">=</span> <span class="hl str">'binomial'</span><span class="hl std">)</span>
+
+<span class="hl std">model_logistic_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">step</span><span class="hl std">(model_logistic_full,</span><span class="hl kwc">direction</span><span class="hl std">=</span><span class="hl str">'both'</span><span class="hl std">,</span><span class="hl kwc">trace</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Start:  AIC=1845.38
+## successful ~ (id + title + genre + budget + revenue + production_companies + 
+##     united_states + english + title_change + popularity + vote_average + 
+##     vote_count + month + year + runtime) - (id + title + revenue)
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## - title_change          1   1781.4 1843.4
+## - production_companies  1   1781.4 1843.4
+## &lt;none&gt;                      1781.4 1845.4
+## - runtime               1   1783.9 1845.9
+## - english               1   1785.6 1847.6
+## - united_states         1   1787.8 1849.8
+## - month                11   1808.3 1850.3
+## - year                  1   1792.0 1854.0
+## - vote_average          1   1799.9 1861.9
+## - genre                10   1830.7 1874.7
+## - budget                1   1820.9 1882.9
+## - popularity            1   1826.1 1888.1
+## - vote_count            1   1844.1 1906.1
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1843.38
+## successful ~ genre + budget + production_companies + united_states + 
+##     english + popularity + vote_average + vote_count + month + 
+##     year + runtime
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## - production_companies  1   1781.4 1841.4
+## &lt;none&gt;                      1781.4 1843.4
+## - runtime               1   1784.0 1844.0
+## + title_change          1   1781.4 1845.4
+## - english               1   1786.2 1846.2
+## - month                11   1808.3 1848.3
+## - united_states         1   1788.3 1848.3
+## - year                  1   1792.0 1852.0
+## - vote_average          1   1799.9 1859.9
+## - genre                10   1830.8 1872.8
+## - budget                1   1821.0 1881.0
+## - popularity            1   1826.1 1886.1
+## - vote_count            1   1844.1 1904.1
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1841.38
+## successful ~ genre + budget + united_states + english + popularity + 
+##     vote_average + vote_count + month + year + runtime
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## &lt;none&gt;                      1781.4 1841.4
+## - runtime               1   1784.0 1842.0
+## + production_companies  1   1781.4 1843.4
+## + title_change          1   1781.4 1843.4
+## - english               1   1786.2 1844.2
+## - month                11   1808.3 1846.3
+## - united_states         1   1788.4 1846.4
+## - year                  1   1792.0 1850.0
+## - vote_average          1   1800.0 1858.0
+## - genre                10   1830.9 1870.9
+## - budget                1   1821.1 1879.1
+## - popularity            1   1827.3 1885.3
+## - vote_count            1   1844.2 1902.2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model_logistic_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">step</span><span class="hl std">(model_logistic_empt,</span><span class="hl kwc">scope</span> <span class="hl std">=</span> <span class="hl kwd">list</span><span class="hl std">(</span><span class="hl kwc">upper</span><span class="hl std">=model_logistic_full),</span><span class="hl kwc">direction</span><span class="hl std">=</span><span class="hl str">'both'</span><span class="hl std">,</span><span class="hl kwc">trace</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Start:  AIC=2595.59
+## successful ~ 1
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + vote_count            1   2003.4 2007.4
+## + popularity            1   2018.3 2022.3
+## + vote_average          1   2397.1 2401.1
+## + budget                1   2470.0 2474.0
+## + united_states         1   2542.4 2546.4
+## + runtime               1   2552.8 2556.8
+## + production_companies  1   2558.7 2562.7
+## + genre                10   2548.6 2570.6
+## + month                11   2561.9 2585.9
+## + english               1   2582.5 2586.5
+## + title_change          1   2587.3 2591.3
+## + year                  1   2589.5 2593.5
+## &lt;none&gt;                      2593.6 2595.6
+## 
+## Step:  AIC=2007.42
+## successful ~ vote_count
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + budget                1   1947.7 1953.7
+## + genre                10   1934.3 1958.3
+## + vote_average          1   1970.9 1976.9
+## + popularity            1   1978.3 1984.3
+## + year                  1   1998.7 2004.7
+## + runtime               1   1999.9 2005.9
+## + united_states         1   2001.4 2007.4
+## &lt;none&gt;                      2003.4 2007.4
+## + english               1   2003.0 2009.0
+## + title_change          1   2003.1 2009.1
+## + production_companies  1   2003.4 2009.4
+## + month                11   1983.8 2009.8
+## - vote_count            1   2593.6 2595.6
+## 
+## Step:  AIC=1953.72
+## successful ~ vote_count + budget
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + popularity            1   1903.0 1911.0
+## + genre                10   1893.5 1919.5
+## + vote_average          1   1926.7 1934.7
+## + year                  1   1937.9 1945.9
+## + united_states         1   1940.7 1948.7
+## + month                11   1924.2 1952.2
+## &lt;none&gt;                      1947.7 1953.7
+## + runtime               1   1947.3 1955.3
+## + production_companies  1   1947.4 1955.4
+## + english               1   1947.7 1955.7
+## + title_change          1   1947.7 1955.7
+## - budget                1   2003.4 2007.4
+## - vote_count            1   2470.0 2474.0
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1910.97
+## successful ~ vote_count + budget + popularity
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + genre                10   1847.6 1875.6
+## + year                  1   1886.9 1896.9
+## + vote_average          1   1887.0 1897.0
+## + month                11   1877.4 1907.4
+## + united_states         1   1897.9 1907.9
+## &lt;none&gt;                      1903.0 1911.0
+## + runtime               1   1902.3 1912.3
+## + production_companies  1   1902.5 1912.5
+## + english               1   1902.7 1912.7
+## + title_change          1   1903.0 1913.0
+## - popularity            1   1947.7 1953.7
+## - vote_count            1   1972.7 1978.7
+## - budget                1   1978.3 1984.3
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1875.63
+## successful ~ vote_count + budget + popularity + genre
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + vote_average          1   1829.9 1859.9
+## + year                  1   1833.9 1863.9
+## + month                11   1824.4 1874.4
+## + united_states         1   1844.7 1874.7
+## &lt;none&gt;                      1847.6 1875.6
+## + english               1   1846.0 1876.0
+## + runtime               1   1847.5 1877.5
+## + title_change          1   1847.6 1877.6
+## + production_companies  1   1847.6 1877.6
+## - genre                10   1903.0 1911.0
+## - popularity            1   1893.5 1919.5
+## - budget                1   1902.2 1928.2
+## - vote_count            1   1924.7 1950.7
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1859.88
+## successful ~ vote_count + budget + popularity + genre + vote_average
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + year                  1   1820.4 1852.4
+## + month                11   1804.2 1856.2
+## + united_states         1   1824.3 1856.3
+## + runtime               1   1826.7 1858.7
+## &lt;none&gt;                      1829.9 1859.9
+## + english               1   1829.3 1861.3
+## + production_companies  1   1829.5 1861.5
+## + title_change          1   1829.7 1861.7
+## - vote_average          1   1847.6 1875.6
+## - genre                10   1887.0 1897.0
+## - popularity            1   1869.2 1897.2
+## - budget                1   1872.2 1900.2
+## - vote_count            1   1892.8 1920.8
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1852.41
+## successful ~ vote_count + budget + popularity + genre + vote_average + 
+##     year
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + month                11   1792.3 1846.3
+## + united_states         1   1815.9 1849.9
+## + runtime               1   1817.1 1851.1
+## &lt;none&gt;                      1820.4 1852.4
+## + english               1   1819.6 1853.6
+## + production_companies  1   1820.2 1854.2
+## + title_change          1   1820.3 1854.3
+## - year                  1   1829.9 1859.9
+## - vote_average          1   1833.9 1863.9
+## - genre                10   1875.3 1887.3
+## - popularity            1   1864.8 1894.8
+## - budget                1   1868.2 1898.2
+## - vote_count            1   1885.4 1915.4
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1846.34
+## successful ~ vote_count + budget + popularity + genre + vote_average + 
+##     year + month
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + united_states         1   1788.7 1844.7
+## + runtime               1   1789.7 1845.7
+## &lt;none&gt;                      1792.3 1846.3
+## + english               1   1791.2 1847.2
+## + production_companies  1   1792.2 1848.2
+## + title_change          1   1792.3 1848.3
+## - month                11   1820.4 1852.4
+## - year                  1   1804.2 1856.2
+## - vote_average          1   1807.9 1859.9
+## - genre                10   1845.5 1879.5
+## - popularity            1   1838.6 1890.6
+## - budget                1   1841.2 1893.2
+## - vote_count            1   1857.7 1909.7
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1844.7
+## successful ~ vote_count + budget + popularity + genre + vote_average + 
+##     year + month + united_states
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + english               1   1784.0 1842.0
+## + runtime               1   1786.2 1844.2
+## &lt;none&gt;                      1788.7 1844.7
+## + title_change          1   1788.3 1846.3
+## - united_states         1   1792.3 1846.3
+## + production_companies  1   1788.7 1846.7
+## - month                11   1815.9 1849.9
+## - year                  1   1799.3 1853.3
+## - vote_average          1   1806.3 1860.3
+## - genre                10   1839.5 1875.5
+## - popularity            1   1832.5 1886.5
+## - budget                1   1839.7 1893.7
+## - vote_count            1   1852.4 1906.4
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1841.96
+## successful ~ vote_count + budget + popularity + genre + vote_average + 
+##     year + month + united_states + english
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## + runtime               1   1781.4 1841.4
+## &lt;none&gt;                      1784.0 1842.0
+## + title_change          1   1783.9 1843.9
+## + production_companies  1   1784.0 1844.0
+## - english               1   1788.7 1844.7
+## - united_states         1   1791.2 1847.2
+## - month                11   1811.5 1847.5
+## - year                  1   1794.6 1850.6
+## - vote_average          1   1800.1 1856.1
+## - genre                10   1835.9 1873.9
+## - popularity            1   1829.3 1885.3
+## - budget                1   1835.0 1891.0
+## - vote_count            1   1847.7 1903.7
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=1841.38
+## successful ~ vote_count + budget + popularity + genre + vote_average + 
+##     year + month + united_states + english + runtime
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## &lt;none&gt;                      1781.4 1841.4
+## - runtime               1   1784.0 1842.0
+## + production_companies  1   1781.4 1843.4
+## + title_change          1   1781.4 1843.4
+## - english               1   1786.2 1844.2
+## - month                11   1808.3 1846.3
+## - united_states         1   1788.4 1846.4
+## - year                  1   1792.0 1850.0
+## - vote_average          1   1800.0 1858.0
+## - genre                10   1830.9 1870.9
+## - budget                1   1821.1 1879.1
+## - popularity            1   1827.3 1885.3
+## - vote_count            1   1844.2 1902.2
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com">#Without running any additional models,</span>
+<span class="hl com"># were these procedures ultimately the same as running the standard backward elimination and forward selection for this problem, or did they take additional steps? Support your answer.</span>
+<span class="hl com"># No. Different Approach (after add/delet new variables, it will add/delet the previous modified variabel to compare)</span>
+
+<span class="hl com"># Calculate and report model accuracy for these models with cutoffs of 0.2, 0.4, 0.5, 0.6, 0.7, and 0.8.</span>
+<span class="hl std">pred_model_logistic_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_logistic_backward,movies_valid,</span> <span class="hl kwc">type</span> <span class="hl std">=</span> <span class="hl str">'response'</span><span class="hl std">)</span>
+<span class="hl std">pred_model_logistic_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_logistic_forward,movies_valid,</span> <span class="hl kwc">type</span> <span class="hl std">=</span> <span class="hl str">'response'</span><span class="hl std">)</span>
+
+<span class="hl std">acc_model_logistic_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">()</span>
+<span class="hl std">acc_model_logistic_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">()</span>
+
+<span class="hl std">cutoffs</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">0.2</span><span class="hl std">,</span> <span class="hl num">0.4</span><span class="hl std">,</span> <span class="hl num">0.5</span><span class="hl std">,</span> <span class="hl num">0.6</span><span class="hl std">,</span> <span class="hl num">0.7</span><span class="hl std">,</span> <span class="hl num">0.8</span><span class="hl std">)</span>
+<span class="hl kwa">for</span> <span class="hl std">(cutoff</span> <span class="hl kwa">in</span> <span class="hl std">cutoffs){</span>
+  <span class="hl std">pred_class_model_logistic_backward</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_model_logistic_backward</span><span class="hl opt">&gt;=</span><span class="hl std">cutoff,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+  <span class="hl std">pred_class_model_logistic_forward</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_model_logistic_forward</span><span class="hl opt">&gt;=</span><span class="hl std">cutoff,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+  <span class="hl std">acc_model_logistic_backward</span><span class="hl kwb">=</span><span class="hl kwd">c</span><span class="hl std">(acc_model_logistic_backward,</span><span class="hl kwd">accuracy</span><span class="hl std">(movies_valid</span><span class="hl opt">$</span><span class="hl std">successful,pred_class_model_logistic_backward))</span>
+  <span class="hl std">acc_model_logistic_forward</span><span class="hl kwb">=</span><span class="hl kwd">c</span><span class="hl std">(acc_model_logistic_forward,</span><span class="hl kwd">accuracy</span><span class="hl std">(movies_valid</span><span class="hl opt">$</span><span class="hl std">successful,pred_class_model_logistic_forward))</span>
+<span class="hl std">}</span>
+<span class="hl std">acc_model_logistic_matrix</span> <span class="hl kwb">=</span> <span class="hl kwd">data.frame</span><span class="hl std">(cutoffs,acc_model_logistic_backward,acc_model_logistic_forward)</span>
+<span class="hl std">acc_model_logistic_matrix</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##   cutoffs acc_model_logistic_backward acc_model_logistic_forward
+## 1     0.2                   0.6605317                  0.6605317
+## 2     0.4                   0.7893661                  0.7893661
+## 3     0.5                   0.7934560                  0.7934560
+## 4     0.6                   0.7770961                  0.7770961
+## 5     0.7                   0.7464213                  0.7464213
+## 6     0.8                   0.7361963                  0.7361963
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># Which data set did you use for this?</span>
+<span class="hl com"># valid data set: movies_valid</span>
+
+<span class="hl com"># Which cutoff achieves the highest accuracy (and on which model)?</span>
+<span class="hl com"># cutoff = 0.5, both of them are the same</span>
+
+<span class="hl com">#(4)10 points: Comparison to Assignment 4</span>
+<span class="hl com"># In both Question (3) above and in Assignment 4, we used accuracy to measure the results.</span>
+<span class="hl com"># Do you think that is a good prediction measure to use for this problem? Support your answer.</span>
+<span class="hl com"># ？？？</span>
+
+<span class="hl com"># Could we have used the methods of Assignment 4 (trees and kNN) to solve</span>
+<span class="hl com"># the same problem as in Assignment #5,Question (2)? Support your answer.</span>
+<span class="hl com"># I would not suggest using kNN, but decision will work in question(2)</span>
+<span class="hl com"># kNN is a classification algorithm, which is not suitable for this linear model</span>
+<span class="hl com"># decision could handel linear question, but it is more suitable for classification question</span>
+<span class="hl com"># it's prediction will be the mean of the revenue of the instance in the same terminal node.</span>
+
+<span class="hl com"># (5) 25 points: LASSO and Ridge</span>
+<span class="hl com"># We often use the model.matrix() function on our data</span>
+<span class="hl com"># before we enter it into LASSO or Ridge calculation.</span>
+<span class="hl com"># Why do we do this?</span>
+<span class="hl com"># Lasso and ridge algorithm require the input variabels to be numeric.</span>
+<span class="hl com"># model.matrix could help us to cover the categoricl vairables into dummy(which is also numerical) variables</span>
+
+<span class="hl com"># What other method have we seen so far that might benefit from using model.matrix() before we ran it?</span>
+<span class="hl com"># kNN might also be benefit from model.matrix() since KNN also requires numerical variables</span>
+
+<span class="hl com"># Use model.matrix() on the same X variables in Question (3)</span>
+<span class="hl com"># to get new data to run LASSO and Ridge.</span>
+<span class="hl com"># except (id, title, revenue)</span>
+<span class="hl std">matrix_train_x</span> <span class="hl kwb">=</span> <span class="hl kwd">model.matrix</span><span class="hl std">(</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue</span><span class="hl opt">+</span><span class="hl std">successful),</span><span class="hl kwc">data</span><span class="hl std">=movies_train)</span>
+<span class="hl std">matrix_valid_x</span> <span class="hl kwb">=</span> <span class="hl kwd">model.matrix</span><span class="hl std">(</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue</span><span class="hl opt">+</span><span class="hl std">successful),</span><span class="hl kwc">data</span><span class="hl std">=movies_valid)</span>
+<span class="hl std">matrix_rest_x</span> <span class="hl kwb">=</span> <span class="hl kwd">model.matrix</span><span class="hl std">(</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue</span><span class="hl opt">+</span><span class="hl std">successful),</span><span class="hl kwc">data</span><span class="hl std">=movies_rest)</span>
+<span class="hl std">matrix_test_x</span> <span class="hl kwb">=</span> <span class="hl kwd">model.matrix</span><span class="hl std">(</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue</span><span class="hl opt">+</span><span class="hl std">successful),</span><span class="hl kwc">data</span><span class="hl std">=movies_test)</span>
+
+<span class="hl com"># Notes: the &quot;-1&quot; in model.matrix() tells R to use the data as if it were creating a model but without an intercept.</span>
+<span class="hl com"># Any time you see &quot;1&quot; in a model specification, it refers to an intercept.</span>
+<span class="hl com"># For example, in creating the null model for forward step procedures,</span>
+<span class="hl com"># we run movies_null &lt;- glm(veryprofitable~1, data=movies_rest, family=&quot;binomial&quot;).</span>
+<span class="hl com"># We're telling R to run a model with no variables, just an intercept.</span>
+<span class="hl com"># If I ran the model movies_all &lt;- glm(veryprofitable~.-1, data=movies_rest, family=&quot;binomial&quot;),</span>
+<span class="hl com"># I would be telling R to run the model with all variables but no intercept value.</span>
+
+<span class="hl com"># Use the new matrix from part (b) to run both LASSO</span>
+<span class="hl com"># and Ridge (logistic) procedures to predict successful.</span>
+<span class="hl com"># Use cross-validation to choose the best lambada value and</span>
+<span class="hl com"># report the lambada values you find.</span>
+<span class="hl com"># Which data set did you use to run these procedures?</span>
+<span class="hl kwd">library</span><span class="hl std">(glmnet)</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## Loading required package: Matrix
+</pre></div>
+<div class="message"><pre class="knitr r">## Loading required package: foreach
+</pre></div>
+<div class="message"><pre class="knitr r">## Loaded glmnet 2.0-18
+</pre></div>
+<div class="message"><pre class="knitr r">## 
+## Attaching package: 'glmnet'
+</pre></div>
+<div class="message"><pre class="knitr r">## The following object is masked from 'package:Metrics':
+## 
+##     auc
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model_ridge_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">cv.glmnet</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=matrix_rest_x,</span><span class="hl kwc">y</span><span class="hl std">=movies_rest</span><span class="hl opt">$</span><span class="hl std">successful,</span><span class="hl kwc">family</span> <span class="hl std">=</span> <span class="hl str">'binomial'</span><span class="hl std">,</span><span class="hl kwc">alpha</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl std">model_lasso_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">cv.glmnet</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=matrix_rest_x,</span><span class="hl kwc">y</span><span class="hl std">=movies_rest</span><span class="hl opt">$</span><span class="hl std">successful,</span><span class="hl kwc">family</span> <span class="hl std">=</span> <span class="hl str">'binomial'</span><span class="hl std">,</span><span class="hl kwc">alpha</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+<span class="hl com"># alpha=0 (ridge)</span>
+<span class="hl com"># alpha=1 (lasso)</span>
+<span class="hl kwd">par</span><span class="hl std">(</span><span class="hl kwc">mfrow</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">2</span><span class="hl std">))</span>
+<span class="hl kwd">plot</span><span class="hl std">(model_ridge_cv)</span>
+<span class="hl kwd">plot</span><span class="hl std">(model_lasso_cv)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_5-1.png" title="plot of chunk BUDT758T_Assignment_5" alt="plot of chunk BUDT758T_Assignment_5" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl std">best_ridge_lambda</span> <span class="hl kwb">=</span> <span class="hl std">model_ridge_cv</span><span class="hl opt">$</span><span class="hl std">lambda.min</span>
+<span class="hl std">best_lasso_lambda</span> <span class="hl kwb">=</span> <span class="hl std">model_lasso_cv</span><span class="hl opt">$</span><span class="hl std">lambda.min</span>
+
+<span class="hl com"># How many variables does your best Ridge model use?</span>
+<span class="hl com"># How many variables does your best LASSO model use?</span>
+<span class="hl kwd">predict</span><span class="hl std">(model_ridge_cv,</span><span class="hl kwc">s</span><span class="hl std">=best_ridge_lambda,</span><span class="hl kwc">type</span><span class="hl std">=</span><span class="hl str">&quot;coefficients&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 33 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                  1
+## (Intercept)           1.742828e+01
+## genreAction          -2.627496e-01
+## genreAdventure       -6.575894e-01
+## genreAnimation        4.706678e-02
+## genreComedy           4.275378e-01
+## genreDocumentary      6.296732e-03
+## genreDrama           -9.692048e-02
+## genreFantasy         -4.823479e-01
+## genreHorror           5.673506e-01
+## genreOther           -1.668155e+00
+## genreRomance          1.685940e+00
+## genreThriller         3.232183e-01
+## budget               -4.199404e-09
+## production_companies  1.076413e-02
+## united_statesYes      4.128388e-01
+## englishYes           -2.563452e-01
+## title_changeYes       1.108100e-02
+## popularity            2.426113e-02
+## vote_average          3.599797e-01
+## vote_count            7.408829e-04
+## month2                3.348858e-01
+## month3               -4.100865e-01
+## month4               -7.696454e-02
+## month5               -9.737713e-02
+## month6                2.157001e-01
+## month7                1.663846e-01
+## month8                3.354374e-01
+## month9               -1.384957e-01
+## month10              -2.843392e-01
+## month11               1.118588e-02
+## month12              -7.115394e-02
+## year                 -1.042608e-02
+## runtime              -2.002728e-03
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">predict</span><span class="hl std">(model_lasso_cv,</span><span class="hl kwc">s</span><span class="hl std">=best_lasso_lambda,</span><span class="hl kwc">type</span><span class="hl std">=</span><span class="hl str">&quot;coefficients&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 33 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                  1
+## (Intercept)           5.061309e+01
+## genreAction          -4.020349e-01
+## genreAdventure       -5.315432e-01
+## genreAnimation        2.493600e-02
+## genreComedy           3.986409e-01
+## genreDocumentary      4.187398e-02
+## genreDrama           -1.264622e-01
+## genreFantasy         -2.623946e-01
+## genreHorror           3.368937e-01
+## genreOther           -2.205764e+00
+## genreRomance          1.526414e+00
+## genreThriller         1.639459e-01
+## budget               -1.254911e-08
+## production_companies -2.405856e-03
+## united_statesYes      3.178380e-01
+## englishYes           -3.085579e-01
+## title_changeYes       .           
+## popularity            3.662296e-02
+## vote_average          2.921581e-01
+## vote_count            1.240469e-03
+## month2                4.044280e-01
+## month3               -4.484302e-01
+## month4                .           
+## month5               -3.800095e-02
+## month6                1.979381e-01
+## month7                1.862579e-01
+## month8                3.590567e-01
+## month9               -9.800283e-02
+## month10              -2.530990e-01
+## month11               3.681669e-02
+## month12               .           
+## year                 -2.673848e-02
+## runtime              -2.721767e-03
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># (6) 10 points Choosing a logistic-based model</span>
+<span class="hl com"># Using a cutoff of 0.5, which model would you suggest we use in practice:</span>
+<span class="hl com"># your stepwise logistic model, your LASSO model, or your Ridge model? Support your answer.</span>
+<span class="hl std">model_logistic_full_retrain</span> <span class="hl kwb">=</span> <span class="hl kwd">glm</span><span class="hl std">(successful</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl std">(id</span><span class="hl opt">+</span><span class="hl std">title</span><span class="hl opt">+</span><span class="hl std">revenue),</span><span class="hl kwc">data</span> <span class="hl std">= movies_rest,</span><span class="hl kwc">family</span> <span class="hl std">=</span> <span class="hl str">'binomial'</span><span class="hl std">)</span>
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">model_logistic_backward_retrain</span> <span class="hl kwb">=</span> <span class="hl kwd">step</span><span class="hl std">(model_logistic_full_retrain,</span><span class="hl kwc">direction</span><span class="hl std">=</span><span class="hl str">'both'</span><span class="hl std">,</span><span class="hl kwc">trace</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Start:  AIC=2303.06
+## successful ~ (id + title + genre + budget + revenue + production_companies + 
+##     united_states + english + title_change + popularity + vote_average + 
+##     vote_count + month + year + runtime) - (id + title + revenue)
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## - title_change          1   2239.1 2301.1
+## - production_companies  1   2239.3 2301.3
+## - runtime               1   2240.1 2302.1
+## &lt;none&gt;                      2239.1 2303.1
+## - english               1   2242.3 2304.3
+## - united_states         1   2244.7 2306.7
+## - year                  1   2247.8 2309.8
+## - month                11   2269.2 2311.2
+## - vote_average          1   2260.4 2322.4
+## - genre                10   2287.0 2331.0
+## - popularity            1   2278.8 2340.8
+## - budget                1   2287.4 2349.4
+## - vote_count            1   2325.6 2387.6
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=2301.11
+## successful ~ genre + budget + production_companies + united_states + 
+##     english + popularity + vote_average + vote_count + month + 
+##     year + runtime
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## - production_companies  1   2239.3 2299.3
+## - runtime               1   2240.1 2300.1
+## &lt;none&gt;                      2239.1 2301.1
+## + title_change          1   2239.1 2303.1
+## - english               1   2243.3 2303.3
+## - united_states         1   2244.8 2304.8
+## - year                  1   2247.9 2307.9
+## - month                11   2269.3 2309.3
+## - vote_average          1   2260.5 2320.5
+## - genre                10   2287.1 2329.1
+## - popularity            1   2278.8 2338.8
+## - budget                1   2287.8 2347.8
+## - vote_count            1   2325.6 2385.6
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=2299.29
+## successful ~ genre + budget + united_states + english + popularity + 
+##     vote_average + vote_count + month + year + runtime
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## - runtime               1   2240.4 2298.4
+## &lt;none&gt;                      2239.3 2299.3
+## + production_companies  1   2239.1 2301.1
+## + title_change          1   2239.3 2301.3
+## - english               1   2243.6 2301.6
+## - united_states         1   2245.3 2303.3
+## - year                  1   2248.2 2306.2
+## - month                11   2269.5 2307.5
+## - vote_average          1   2260.5 2318.5
+## - genre                10   2288.1 2328.1
+## - popularity            1   2279.1 2337.1
+## - budget                1   2288.6 2346.6
+## - vote_count            1   2326.3 2384.3
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Step:  AIC=2298.38
+## successful ~ genre + budget + united_states + english + popularity + 
+##     vote_average + vote_count + month + year
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+</pre></div>
+<div class="output"><pre class="knitr r">##                        Df Deviance    AIC
+## &lt;none&gt;                      2240.4 2298.4
+## + runtime               1   2239.3 2299.3
+## + production_companies  1   2240.1 2300.1
+## + title_change          1   2240.4 2300.4
+## - english               1   2244.5 2300.5
+## - united_states         1   2246.6 2302.6
+## - year                  1   2249.2 2305.2
+## - month                11   2270.7 2306.7
+## - vote_average          1   2260.5 2316.5
+## - genre                10   2292.2 2330.2
+## - popularity            1   2279.7 2335.7
+## - budget                1   2298.3 2354.3
+## - vote_count            1   2328.0 2384.0
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">pred_model_logistic_backward_retrain</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_logistic_backward_retrain,movies_test,</span><span class="hl kwc">type</span> <span class="hl std">=</span> <span class="hl str">'response'</span><span class="hl std">)</span>
+<span class="hl std">pred_model_model_ridge_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_ridge_cv,</span><span class="hl kwc">s</span><span class="hl std">=best_ridge_lambda,</span><span class="hl kwc">newx</span> <span class="hl std">= matrix_test_x,</span><span class="hl kwc">type</span> <span class="hl std">=</span> <span class="hl str">'response'</span><span class="hl std">)</span>
+<span class="hl std">pred_model_model_lasso_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_lasso_cv,</span><span class="hl kwc">s</span><span class="hl std">=best_lasso_lambda,</span><span class="hl kwc">newx</span> <span class="hl std">= matrix_test_x,</span><span class="hl kwc">type</span> <span class="hl std">=</span> <span class="hl str">'response'</span><span class="hl std">)</span>
+
+<span class="hl std">class_pred_model_logistic_backward_retrain</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_model_logistic_backward_retrain</span><span class="hl opt">&gt;</span><span class="hl num">0.5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl std">class_pred_model_model_ridge_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_model_model_ridge_cv</span><span class="hl opt">&gt;</span><span class="hl num">0.5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl std">class_pred_model_model_lasso_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">ifelse</span><span class="hl std">(pred_model_model_lasso_cv</span><span class="hl opt">&gt;</span><span class="hl num">0.5</span><span class="hl std">,</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">)</span>
+
+<span class="hl std">acc_model_logistic_backward_retrain</span> <span class="hl kwb">=</span> <span class="hl kwd">accuracy</span><span class="hl std">(movies_test</span><span class="hl opt">$</span><span class="hl std">successful,class_pred_model_logistic_backward_retrain)</span>
+<span class="hl std">acc_model_logistic_backward_retrain</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.7841452
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">acc_model_ridge_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">accuracy</span><span class="hl std">(movies_test</span><span class="hl opt">$</span><span class="hl std">successful,class_pred_model_model_ridge_cv)</span>
+<span class="hl std">acc_model_ridge_cv</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.7631328
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">acc_model_lasso_cv</span> <span class="hl kwb">=</span> <span class="hl kwd">accuracy</span><span class="hl std">(movies_test</span><span class="hl opt">$</span><span class="hl std">successful,class_pred_model_model_lasso_cv)</span>
+<span class="hl std">acc_model_lasso_cv</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 0.7879656
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># Based on accuracy and your results from Assignment 4 (or from the answer key for Assignment 4 if you prefer),\</span>
+<span class="hl com"># are logistic regression-based methods like these three better for this problem than trees or kNN? Support your answer.</span>
+<span class="hl com"># for previous assignment</span>
+<span class="hl com"># tree acc = 78.47%</span>
+<span class="hl com"># knn acc = 72.16%</span>
+<span class="hl com"># it seems that, with respect to ACC, decision tree algorithm performs better</span>
+</pre></div>
+</div></div>
+
+</body>
+</html>
