@@ -1,0 +1,543 @@
+<html>
+
+<head>
+<style type="text/css">
+.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.left {
+  text-align: left;
+}
+.right {
+  text-align: right;
+}
+.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<title>BUDT758T_Assignment#6</title>
+</head>
+
+<body>
+
+<p>
+<br>BUDT758T_Assignment#6
+<br>Topic: #tree #randomForest
+<br>Instructor: Prof. Courtney Paulson 
+<br>Student: Xukun(Frank) LIU <a href='https://www.xukun-liu.com' target='_blank' >www.xukun-liu.com</a>
+<br>Details: <a href='https://drive.google.com/drive/folders/1nRhC31vO6fo7nS1hK9mMr5Y58i4Rg9Wc?usp=sharing' target='_blank'>Data/Response</a>
+</p>
+
+<div class="chunk" id="BUDT758T_Assignment_6"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com"># setwd(&quot;~/Google Drive (xukun.liu@rhsmith.umd.edu)/RHSmith-Sync/2-Spring-2019/2-BUDT 758T (0503)/Assignment/Assignment#6&quot;)</span>
+<span class="hl kwd">library</span><span class="hl std">(readr)</span>
+<span class="hl std">dt</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read_csv</span><span class="hl std">(</span><span class="hl str">'college.csv'</span><span class="hl std">)</span>
+</pre></div>
+<div class="warning"><pre class="knitr r">## Warning: Missing column names filled in: 'X1' [1]
+</pre></div>
+<div class="message"><pre class="knitr r">## Parsed with column specification:
+## cols(
+##   X1 = col_character(),
+##   Private = col_character(),
+##   Apps = col_double(),
+##   Accept = col_double(),
+##   Enroll = col_double(),
+##   Top10perc = col_double(),
+##   Top25perc = col_double(),
+##   F.Undergrad = col_double(),
+##   P.Undergrad = col_double(),
+##   Outstate = col_double(),
+##   Room.Board = col_double(),
+##   Books = col_double(),
+##   Personal = col_double(),
+##   PhD = col_double(),
+##   Terminal = col_double(),
+##   S.F.Ratio = col_double(),
+##   perc.alumni = col_double(),
+##   Expend = col_double(),
+##   Grad.Rate = col_double()
+## )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># View(dt)</span>
+<span class="hl std">dt</span><span class="hl opt">$</span><span class="hl std">Private</span> <span class="hl kwb">=</span> <span class="hl kwd">as.factor</span><span class="hl std">(dt</span><span class="hl opt">$</span><span class="hl std">Private)</span>
+<span class="hl kwd">str</span><span class="hl std">(dt)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame':	777 obs. of  19 variables:
+##  $ X1         : chr  &quot;Abilene Christian University&quot; &quot;Adelphi University&quot; &quot;Adrian College&quot; &quot;Agnes Scott College&quot; ...
+##  $ Private    : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ Apps       : num  1660 2186 1428 417 193 ...
+##  $ Accept     : num  1232 1924 1097 349 146 ...
+##  $ Enroll     : num  721 512 336 137 55 158 103 489 227 172 ...
+##  $ Top10perc  : num  23 16 22 60 16 38 17 37 30 21 ...
+##  $ Top25perc  : num  52 29 50 89 44 62 45 68 63 44 ...
+##  $ F.Undergrad: num  2885 2683 1036 510 249 ...
+##  $ P.Undergrad: num  537 1227 99 63 869 ...
+##  $ Outstate   : num  7440 12280 11250 12960 7560 ...
+##  $ Room.Board : num  3300 6450 3750 5450 4120 ...
+##  $ Books      : num  450 750 400 450 800 500 500 450 300 660 ...
+##  $ Personal   : num  2200 1500 1165 875 1500 ...
+##  $ PhD        : num  70 29 53 92 76 67 90 89 79 40 ...
+##  $ Terminal   : num  78 30 66 97 72 73 93 100 84 41 ...
+##  $ S.F.Ratio  : num  18.1 12.2 12.9 7.7 11.9 9.4 11.5 13.7 11.3 11.5 ...
+##  $ perc.alumni: num  12 16 30 37 2 11 26 37 23 15 ...
+##  $ Expend     : num  7041 10527 8735 19016 10922 ...
+##  $ Grad.Rate  : num  60 56 54 59 15 55 63 73 80 52 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   X1 = col_character(),
+##   ..   Private = col_character(),
+##   ..   Apps = col_double(),
+##   ..   Accept = col_double(),
+##   ..   Enroll = col_double(),
+##   ..   Top10perc = col_double(),
+##   ..   Top25perc = col_double(),
+##   ..   F.Undergrad = col_double(),
+##   ..   P.Undergrad = col_double(),
+##   ..   Outstate = col_double(),
+##   ..   Room.Board = col_double(),
+##   ..   Books = col_double(),
+##   ..   Personal = col_double(),
+##   ..   PhD = col_double(),
+##   ..   Terminal = col_double(),
+##   ..   S.F.Ratio = col_double(),
+##   ..   perc.alumni = col_double(),
+##   ..   Expend = col_double(),
+##   ..   Grad.Rate = col_double()
+##   .. )
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># b. Set the seed to 91101.</span>
+<span class="hl kwd">set.seed</span><span class="hl std">(</span><span class="hl num">91101</span><span class="hl std">)</span>
+
+<span class="hl com"># c. Randomly partition the data set in the following order (note that if you do not follow this order, many of the questions in this assignment will not make sense to you!):</span>
+<span class="hl com"># i. Split 35% of the observations in the full data set to use as testing data.</span>
+<span class="hl com"># Using these observations, create a testing data set called college_test.</span>
+<span class="hl std">test_index</span> <span class="hl kwb">=</span> <span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">nrow</span><span class="hl std">(dt),</span><span class="hl kwd">nrow</span><span class="hl std">(dt)</span><span class="hl opt">*</span><span class="hl num">0.35</span><span class="hl std">)</span>
+<span class="hl std">college_test</span> <span class="hl kwb">=</span> <span class="hl std">dt[test_index,]</span>
+<span class="hl com"># ii. Save the remaining 65% of the data as college_rest.</span>
+<span class="hl std">college_rest</span> <span class="hl kwb">=</span> <span class="hl std">dt[</span><span class="hl opt">-</span><span class="hl std">test_index,]</span>
+
+<span class="hl com"># 1. (25 points) Principal Components Analysis</span>
+<span class="hl com"># a. Using the college_rest data, run a PCA on all numeric X variables</span>
+<span class="hl com"># (so you should exclude the name of the college, Private, and Grad.Rate, since graduation rate is the main goal of the analysis; it will be the Y variable).</span>
+<span class="hl kwd">colnames</span><span class="hl std">(dt)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  [1] &quot;X1&quot;          &quot;Private&quot;     &quot;Apps&quot;        &quot;Accept&quot;      &quot;Enroll&quot;     
+##  [6] &quot;Top10perc&quot;   &quot;Top25perc&quot;   &quot;F.Undergrad&quot; &quot;P.Undergrad&quot; &quot;Outstate&quot;   
+## [11] &quot;Room.Board&quot;  &quot;Books&quot;       &quot;Personal&quot;    &quot;PhD&quot;         &quot;Terminal&quot;   
+## [16] &quot;S.F.Ratio&quot;   &quot;perc.alumni&quot; &quot;Expend&quot;      &quot;Grad.Rate&quot;
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">pca_list</span> <span class="hl kwb">=</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;Apps&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Accept&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Enroll&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Top10perc&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Top25perc&quot;</span><span class="hl std">,</span><span class="hl str">&quot;F.Undergrad&quot;</span><span class="hl std">,</span><span class="hl str">&quot;P.Undergrad&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Outstate&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Room.Board&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Books&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Personal&quot;</span><span class="hl std">,</span><span class="hl str">&quot;PhD&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Terminal&quot;</span><span class="hl std">,</span><span class="hl str">&quot;S.F.Ratio&quot;</span><span class="hl std">,</span><span class="hl str">&quot;perc.alumni&quot;</span><span class="hl std">,</span><span class="hl str">&quot;Expend&quot;</span><span class="hl std">)</span>
+<span class="hl std">pca_college_rest</span> <span class="hl kwb">=</span> <span class="hl kwd">prcomp</span><span class="hl std">(college_rest[,pca_list])</span>
+<span class="hl kwd">summary</span><span class="hl std">(pca_college_rest)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## Importance of components:
+##                              PC1       PC2       PC3       PC4       PC5
+## Standard deviation     6306.2829 6028.0371 2.305e+03 1.475e+03 1.193e+03
+## Proportion of Variance    0.4607    0.4209 6.156e-02 2.521e-02 1.648e-02
+## Cumulative Proportion     0.4607    0.8816 9.432e-01 9.684e-01 9.849e-01
+##                             PC6       PC7       PC8       PC9      PC10
+## Standard deviation     782.6117 575.67084 545.28332 196.22606 159.48834
+## Proportion of Variance   0.0071   0.00384   0.00344   0.00045   0.00029
+## Cumulative Proportion    0.9920   0.99581   0.99925   0.99970   0.99999
+##                         PC11  PC12 PC13 PC14  PC15  PC16
+## Standard deviation     19.93 14.06 9.32 6.17 5.257 2.899
+## Proportion of Variance  0.00  0.00 0.00 0.00 0.000 0.000
+## Cumulative Proportion   1.00  1.00 1.00 1.00 1.000 1.000
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># b. Plot the results of your PCA analysis. How many principal components would you suggest we use for this data?</span>
+<span class="hl std">pca_college_rest</span><span class="hl opt">$</span><span class="hl std">sdev</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  [1] 6306.282904 6028.037078 2305.303216 1475.090842 1192.867271
+##  [6]  782.611700  575.670839  545.283324  196.226058  159.488342
+## [11]   19.925923   14.055729    9.319623    6.169932    5.256921
+## [16]    2.899220
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">plot</span><span class="hl std">(pca_college_rest)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-1.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com"># I would suggest 2 components. As we could see starts from PC3, Proportion of Variance is very low</span>
+<span class="hl std">PC2</span> <span class="hl kwb">=</span> <span class="hl std">pca_college_rest</span><span class="hl opt">$</span><span class="hl std">x[,</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span><span class="hl num">2</span><span class="hl std">)]</span>
+<span class="hl com"># ??????????????????????????????</span>
+<span class="hl com"># pc2</span>
+<span class="hl com"># pc3</span>
+
+<span class="hl com"># c. Run two linear regressions:</span>
+<span class="hl com"># (1) a standard linear regression using the same variables as you used for the PCA (that is, predict graduation rate using the numeric X variables from part (a)), and</span>
+<span class="hl com"># (2) a principal components linear regression using the number of principal components you chose in part (b).</span>
+<span class="hl std">lm_college_rest</span> <span class="hl kwb">=</span> <span class="hl kwd">lm</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.</span><span class="hl opt">-</span><span class="hl std">X1</span><span class="hl opt">-</span><span class="hl std">Private,</span><span class="hl kwc">data</span> <span class="hl std">= college_rest)</span>
+<span class="hl std">pc_college_rest</span> <span class="hl kwb">=</span> <span class="hl kwd">lm</span><span class="hl std">(college_rest</span><span class="hl opt">$</span><span class="hl std">Grad.Rate</span><span class="hl opt">~</span><span class="hl std">PC2)</span>
+
+<span class="hl com"># i. Report either the adjusted 𝑅2 or the AIC for both models.</span>
+<span class="hl kwd">summary</span><span class="hl std">(lm_college_rest)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## lm(formula = Grad.Rate ~ . - X1 - Private, data = college_rest)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -50.689  -6.876  -0.634   6.528  48.248 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 44.8446497  5.6735877   7.904 1.80e-14 ***
+## Apps         0.0014274  0.0005705   2.502  0.01268 *  
+## Accept       0.0014235  0.0011456   1.242  0.21465    
+## Enroll      -0.0017523  0.0028899  -0.606  0.54456    
+## Top10perc    0.1105948  0.0902609   1.225  0.22106    
+## Top25perc    0.1168351  0.0667837   1.749  0.08084 .  
+## F.Undergrad -0.0008477  0.0004682  -1.811  0.07082 .  
+## P.Undergrad -0.0011843  0.0004532  -2.613  0.00925 ** 
+## Outstate     0.0007996  0.0002828   2.827  0.00489 ** 
+## Room.Board   0.0020067  0.0007374   2.721  0.00673 ** 
+## Books       -0.0061737  0.0036367  -1.698  0.09022 .  
+## Personal    -0.0018807  0.0010384  -1.811  0.07074 .  
+## PhD          0.0795716  0.0684157   1.163  0.24537    
+## Terminal    -0.1384457  0.0726835  -1.905  0.05740 .  
+## S.F.Ratio    0.0022882  0.1948283   0.012  0.99063    
+## perc.alumni  0.3315877  0.0606856   5.464 7.43e-08 ***
+## Expend      -0.0004210  0.0002141  -1.966  0.04981 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 12.72 on 489 degrees of freedom
+## Multiple R-squared:  0.4745,	Adjusted R-squared:  0.4573 
+## F-statistic: 27.59 on 16 and 489 DF,  p-value: &lt; 2.2e-16
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">summary</span><span class="hl std">(pc_college_rest)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+## lm(formula = college_rest$Grad.Rate ~ PC2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -45.849  -9.398   0.525   8.547  54.857 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 65.5889328  0.6538662 100.309  &lt; 2e-16 ***
+## PC2PC1       0.0013337  0.0001038  12.850  &lt; 2e-16 ***
+## PC2PC2      -0.0005687  0.0001086  -5.238 2.39e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 14.71 on 503 degrees of freedom
+## Multiple R-squared:  0.2768,	Adjusted R-squared:  0.274 
+## F-statistic: 96.28 on 2 and 503 DF,  p-value: &lt; 2.2e-16
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># ii. Which model appears to be better given the adjusted 𝑅2 or AIC results?</span>
+<span class="hl com"># Does this surprise you?</span>
+<span class="hl com"># Our full model has better Ajusted R2. Not superise, PCA will miss some infomation</span>
+
+<span class="hl com"># iii. Which of the two models is better for inference? Would your answer potentially change if the values of adjusted 𝑅2 or AIC changed? Explain.</span>
+<span class="hl com"># our full model will have better inference and will not change even if PCA model has better AIC or Adj R2. Because PCA is using another value to represent the original multi-variables, we could not get much inference from PCA models.</span>
+
+<span class="hl com"># 2. (15 points) Bootstrap Sample (Single Tree)</span>
+<span class="hl com"># a. Create a single bootstrapped sample from the college_rest data.</span>
+<span class="hl std">num_rest</span> <span class="hl kwb">=</span> <span class="hl kwd">nrow</span><span class="hl std">(college_rest)</span>
+<span class="hl std">single_bootstrap_sample_index</span><span class="hl kwb">=</span><span class="hl kwd">sample</span><span class="hl std">(</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,num_rest),num_rest,</span><span class="hl kwc">replace</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+
+<span class="hl com"># b. Using your single sample, run a single tree to predict Grad.Rate using all other variables except the name of the college.</span>
+<span class="hl com"># Is this a bagged tree or a random forest (of size 1)?</span>
+<span class="hl kwd">library</span><span class="hl std">(tree)</span>
+<span class="hl std">single_bag_tree</span> <span class="hl kwb">=</span> <span class="hl kwd">tree</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span> <span class="hl std">= college_rest[single_bootstrap_sample_index,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">])</span>
+
+<span class="hl com"># c. Plot your single tree. Does this appear to be a useful tree? Explain.</span>
+<span class="hl kwd">summary</span><span class="hl std">(single_bag_tree)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Regression tree:
+## tree(formula = Grad.Rate ~ ., data = college_rest[single_bootstrap_sample_index, 
+##     -1])
+## Variables actually used in tree construction:
+##  [1] &quot;Outstate&quot;    &quot;Apps&quot;        &quot;Enroll&quot;      &quot;perc.alumni&quot; &quot;Top25perc&quot;  
+##  [6] &quot;F.Undergrad&quot; &quot;P.Undergrad&quot; &quot;Terminal&quot;    &quot;Personal&quot;    &quot;PhD&quot;        
+## Number of terminal nodes:  17 
+## Residual mean deviance:  112 = 54760 / 489 
+## Distribution of residuals:
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## -40.1000  -5.6210   0.2755   0.0000   5.9670  42.4200
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">plot</span><span class="hl std">(single_bag_tree)</span>
+<span class="hl kwd">text</span><span class="hl std">(single_bag_tree,</span><span class="hl kwc">pretty</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-2.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com"># d. Use your single tree to predict Grad.Rate for the college_test data. What is the RMSE for your predictions?</span>
+<span class="hl std">pred_single_bag_tree</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(single_bag_tree,college_test)</span>
+<span class="hl kwd">library</span><span class="hl std">(Metrics)</span>
+<span class="hl kwd">rmse</span><span class="hl std">(pred_single_bag_tree,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 15.27547
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 3. (15 points) Bagging: Use your college_rest data to run a bagging procedure for 200 regression trees,</span>
+<span class="hl com"># again using Grad.Rate as the dependent variable and all other variables except the name of the college as independent variables.</span>
+<span class="hl kwd">library</span><span class="hl std">(randomForest)</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## randomForest 4.6-14
+</pre></div>
+<div class="message"><pre class="knitr r">## Type rfNews() to see new features/changes/bug fixes.
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">full_bag_tree</span> <span class="hl kwb">=</span> <span class="hl kwd">randomForest</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">ntree</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">,</span><span class="hl kwc">mtry</span><span class="hl std">=</span><span class="hl kwd">ncol</span><span class="hl std">(college_rest)</span><span class="hl opt">-</span><span class="hl num">2</span><span class="hl std">,</span><span class="hl kwc">importance</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl com"># a. Report the Variable Importance Plot for your bagging procedure. Given your single tree from Question 2, do the results surprise you? Why or why not?</span>
+<span class="hl std">full_bag_tree</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+##  randomForest(formula = Grad.Rate ~ ., data = college_rest[, -1],      ntree = 200, mtry = ncol(college_rest) - 2, importance = TRUE) 
+##                Type of random forest: regression
+##                      Number of trees: 200
+## No. of variables tried at each split: 17
+## 
+##           Mean of squared residuals: 178.8919
+##                     % Var explained: 39.84
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">importance</span><span class="hl std">(full_bag_tree)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##                 %IncMSE IncNodePurity
+## Private      3.24739166       187.387
+## Apps        11.46479692      8615.772
+## Accept       5.29968752      2736.092
+## Enroll       7.34990103      4490.213
+## Top10perc    9.48106054      7336.106
+## Top25perc    7.24828182     11083.012
+## F.Undergrad  5.77408965      4494.951
+## P.Undergrad  7.99159434      9356.281
+## Outstate    18.89508167     48023.456
+## Room.Board   5.43680522      7055.448
+## Books        0.08097987      4684.115
+## Personal     4.47580190      6525.097
+## PhD          4.84137965      4835.927
+## Terminal     1.26246311      3817.236
+## S.F.Ratio    4.96778042      4265.376
+## perc.alumni 19.45905552     13395.247
+## Expend       1.15109680      6245.959
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">varImpPlot</span><span class="hl std">(full_bag_tree)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-3.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com"># b. Use your bagging results to predict Grad.Rate on the training data. Report your training RMSE.</span>
+<span class="hl std">pred_full_bag_tree_train</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(full_bag_tree,college_rest)</span>
+<span class="hl kwd">rmse</span><span class="hl std">(pred_full_bag_tree_train,college_rest</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 5.422144
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># c. Use your bagging results to predict Grad.Rate on the test data.</span>
+<span class="hl std">pred_full_bag_tree_test</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(full_bag_tree,college_test)</span>
+
+<span class="hl com"># i. Report your test data RMSE.</span>
+<span class="hl kwd">rmse</span><span class="hl std">(pred_full_bag_tree_test,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.58911
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># ii. Does there appear to be overfitting happening? Support your answer.</span>
+
+<span class="hl com"># iii. Does bagging appear to show improvement over the single tree?</span>
+<span class="hl com"># yes, the rmse of bagging is lower than the rmse form single tree.</span>
+
+<span class="hl com"># 4. (15 points) Random Forest: Use your training data to run a random forest procedure for 200 regression trees using 4 random variables per split, again using Grad.Rate as the dependent variable and all other variables except the name of the college as independent variables.</span>
+<span class="hl std">forest_4</span> <span class="hl kwb">=</span> <span class="hl kwd">randomForest</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">ntree</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">,</span><span class="hl kwc">mtry</span><span class="hl std">=</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl kwc">importance</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl com"># a. Report the Variable Importance Plot for your random forest procedure. Does it appear that any of the variables in the data set is significantly affecting our results more than the others? Support your answer.</span>
+<span class="hl std">forest_4</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+##  randomForest(formula = Grad.Rate ~ ., data = college_rest[, -1],      ntree = 200, mtry = 4, importance = TRUE) 
+##                Type of random forest: regression
+##                      Number of trees: 200
+## No. of variables tried at each split: 4
+## 
+##           Mean of squared residuals: 172.864
+##                     % Var explained: 41.87
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">importance</span><span class="hl std">(forest_4)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##               %IncMSE IncNodePurity
+## Private      4.740209      1586.546
+## Apps         8.939705      7431.209
+## Accept       5.981612      4935.755
+## Enroll       7.460489      5877.441
+## Top10perc   10.385896     12253.225
+## Top25perc    9.096059     11003.905
+## F.Undergrad  5.757738      5612.147
+## P.Undergrad  8.536289      7981.836
+## Outstate    13.053696     21853.930
+## Room.Board   5.969355     11897.502
+## Books        2.398997      4290.899
+## Personal     4.825412      7761.786
+## PhD          4.993695      6138.621
+## Terminal     2.760772      4855.921
+## S.F.Ratio    5.979799      4912.034
+## perc.alumni 13.812179     15948.622
+## Expend       5.859166      9938.003
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">varImpPlot</span><span class="hl std">(forest_4)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-4.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl com"># b. If we increase the number of variables per split from 4 to 15, would you expect the Variable Importance Plot to change? Support your answer.</span>
+<span class="hl com"># Would Not change much</span>
+<span class="hl std">forest_15</span> <span class="hl kwb">=</span> <span class="hl kwd">randomForest</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">ntree</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">,</span><span class="hl kwc">mtry</span><span class="hl std">=</span><span class="hl num">15</span><span class="hl std">,</span><span class="hl kwc">importance</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">forest_15</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## 
+## Call:
+##  randomForest(formula = Grad.Rate ~ ., data = college_rest[, -1],      ntree = 200, mtry = 15, importance = TRUE) 
+##                Type of random forest: regression
+##                      Number of trees: 200
+## No. of variables tried at each split: 15
+## 
+##           Mean of squared residuals: 177.4517
+##                     % Var explained: 40.33
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">importance</span><span class="hl std">(forest_15)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##               %IncMSE IncNodePurity
+## Private      2.705732      162.0276
+## Apps        11.731200     8350.9190
+## Accept       5.662860     3136.9308
+## Enroll       7.499458     5010.6055
+## Top10perc   10.448910     9075.8409
+## Top25perc    8.288689    10232.4129
+## F.Undergrad  6.894361     4415.2033
+## P.Undergrad  9.458150     9405.6046
+## Outstate    18.643319    43457.4815
+## Room.Board   7.108920     7521.4529
+## Books        2.493378     4685.6444
+## Personal     3.877283     6369.5775
+## PhD          5.629452     4793.6968
+## Terminal     1.682300     3875.7895
+## S.F.Ratio    5.423891     4426.5047
+## perc.alumni 19.747486    15458.1161
+## Expend       3.468147     6095.1269
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">varImpPlot</span><span class="hl std">(forest_15)</span>
+<span class="hl com"># c. Use your random forest results to predict Grad.Rate for the test data. What is your RMSE here? Does random forest appear to be a better option than bagging for this problem?</span>
+<span class="hl std">pred_forest_4</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(forest_4,college_test)</span>
+<span class="hl kwd">rmse</span><span class="hl std">(pred_forest_4,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.52787
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 5. (15 points) Boosting: Use your training data to run a boosting procedure using GBM for 200 regression trees, again using Grad.Rate as the dependent variable and all other variables except the name of the college as independent variables. Note that Grad.Rate is a continuous, numeric variable; your distribution should be normal (gaussian)!</span>
+<span class="hl kwd">library</span><span class="hl std">(gbm)</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## Loaded gbm 2.1.5
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-5.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r"><span class="hl std">boosting</span><span class="hl kwb">=</span><span class="hl kwd">gbm</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">distribution</span><span class="hl std">=</span><span class="hl str">&quot;gaussian&quot;</span><span class="hl std">,</span><span class="hl kwc">n.trees</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">)</span>
+<span class="hl com"># a. Report the Relative Influence Plot for your boosting procedure.</span>
+<span class="hl kwd">summary</span><span class="hl std">(boosting)</span>
+</pre></div>
+</div><div class="rimage default"><img src="figure/BUDT758T_Assignment_6-6.png" title="plot of chunk BUDT758T_Assignment_6" alt="plot of chunk BUDT758T_Assignment_6" class="plot" /></div><div class="rcode">
+<div class="output"><pre class="knitr r">##                     var    rel.inf
+## Outstate       Outstate 24.4011514
+## perc.alumni perc.alumni 13.0588411
+## Top10perc     Top10perc  8.9621681
+## Top25perc     Top25perc  8.4684898
+## Room.Board   Room.Board  7.2115579
+## P.Undergrad P.Undergrad  5.8956439
+## Enroll           Enroll  5.5106086
+## Personal       Personal  5.3614725
+## Apps               Apps  5.3563761
+## Terminal       Terminal  3.5469306
+## Expend           Expend  3.3052910
+## Books             Books  2.9487046
+## F.Undergrad F.Undergrad  2.4767172
+## PhD                 PhD  1.5236917
+## Accept           Accept  1.0709817
+## S.F.Ratio     S.F.Ratio  0.9013738
+## Private         Private  0.0000000
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># i. Is this plot consistent with the Variable Importance Plots from 3(a) and 4(a)? Support your answer.</span>
+<span class="hl com"># Yes, the most influencial variables is perc.alumni/outstate</span>
+
+<span class="hl com"># ii. Would you expect this plot to be consistent with the Variable Importance Plots from 3(a) and 4(a)? Support your answer.</span>
+<span class="hl com"># Yes</span>
+
+<span class="hl com"># b. Use your boosting results to predict Rating for the test data, making sure to use the full 200 trees.</span>
+<span class="hl com"># What is your RMSE here? Does boosting appear to be a better option than bagging and/or random forest for this problem?</span>
+<span class="hl std">pred_boosting</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(boosting,college_test,</span><span class="hl kwc">n.trees</span> <span class="hl std">=</span> <span class="hl num">200</span><span class="hl std">)</span>
+<span class="hl kwd">rmse</span><span class="hl std">(pred_boosting,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.07724
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># 6. (15 points) Repeat your ensemble methods from Questions 3 through 5 with 1000 trees instead of 200. (Do not re-report variable importance/relative influence plots.)</span>
+<span class="hl std">model_1000_bagging</span> <span class="hl kwb">=</span> <span class="hl kwd">randomForest</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">ntree</span><span class="hl std">=</span><span class="hl num">1000</span><span class="hl std">,</span><span class="hl kwc">mtry</span><span class="hl std">=</span><span class="hl kwd">ncol</span><span class="hl std">(college_rest)</span><span class="hl opt">-</span><span class="hl num">2</span><span class="hl std">,</span><span class="hl kwc">importance</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">model_1000_forest</span> <span class="hl kwb">=</span> <span class="hl kwd">randomForest</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">ntree</span><span class="hl std">=</span><span class="hl num">1000</span><span class="hl std">,</span><span class="hl kwc">mtry</span><span class="hl std">=</span><span class="hl num">4</span><span class="hl std">,</span><span class="hl kwc">importance</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">model_1000_boosting</span> <span class="hl kwb">=</span> <span class="hl kwd">gbm</span><span class="hl std">(Grad.Rate</span><span class="hl opt">~</span><span class="hl std">.,</span><span class="hl kwc">data</span><span class="hl std">=college_rest[,</span><span class="hl opt">-</span><span class="hl num">1</span><span class="hl std">],</span><span class="hl kwc">distribution</span><span class="hl std">=</span><span class="hl str">&quot;gaussian&quot;</span><span class="hl std">,</span><span class="hl kwc">n.trees</span><span class="hl std">=</span><span class="hl num">1000</span><span class="hl std">)</span>
+
+<span class="hl com"># a. Calculate the new RMSE values on the test data with the three extended ensemble methods. Have the relative rankings of your ensemble methods changed? (That is, is there a new method you prefer based on these results?)</span>
+<span class="hl std">pred_1000_bagging</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_1000_bagging,college_test)</span>
+<span class="hl std">pred_1000_forest</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_1000_forest,college_test)</span>
+<span class="hl std">pred_1000_boosting</span> <span class="hl kwb">=</span> <span class="hl kwd">predict</span><span class="hl std">(model_1000_boosting,college_test,</span><span class="hl kwc">n.trees</span> <span class="hl std">=</span> <span class="hl num">1000</span><span class="hl std">)</span>
+
+<span class="hl std">rmse_1000_bagging</span> <span class="hl kwb">=</span> <span class="hl kwd">rmse</span><span class="hl std">(pred_1000_bagging,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+<span class="hl std">rmse_1000_forest</span> <span class="hl kwb">=</span> <span class="hl kwd">rmse</span><span class="hl std">(pred_1000_forest,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+<span class="hl std">rmse_1000_boosting</span> <span class="hl kwb">=</span> <span class="hl kwd">rmse</span><span class="hl std">(pred_1000_boosting,college_test</span><span class="hl opt">$</span><span class="hl std">Grad.Rate)</span>
+
+<span class="hl std">rmse_1000_bagging</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.68489
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">rmse_1000_forest</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.56522
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl std">rmse_1000_boosting</span>
+</pre></div>
+<div class="output"><pre class="knitr r">## [1] 12.38338
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl com"># b. Consider your results from part (a) and imagine you have a brand new data set of colleges and their 2018 data.</span>
+<span class="hl com"># i. Why might you prefer to use the ensemble methods with 200 trees instead of the ensemble methods with 1000 trees to predict for 2018?</span>
+<span class="hl com"># ii. Why might you prefer to use the ensemble methods with 1000 trees instead of the ensemble methods with 200 trees to predict for 2018?</span>
+</pre></div>
+</div></div>
+
+</body>
+</html>
